@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Net-Stream Unified Stack Manager CLI router.
+"""Polaris Unified Stack Manager CLI router.
 
 Delegates commands directly to domain-specific action modules in orchestrator.actions.
 """
@@ -24,7 +24,7 @@ REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 def print_help():
-    print("""Net-Stream Unified Stack Manager
+    print("""Polaris Unified Stack Manager
 
 Usage:
   ./manage.py <command> [subcommand/options]
@@ -79,7 +79,7 @@ Examples:
 
 
 def main():
-    """Main routing function for the Net-Stream stack manager."""
+    """Main routing function for the Polaris stack manager."""
     if not logging.getLogger().hasHandlers():
         logging.basicConfig(level=logging.INFO, stream=sys.stdout, format="%(message)s")
 

@@ -1,4 +1,4 @@
-"""Net-Stream Orchestrator Package.
+"""Polaris Orchestrator Package.
 
 A modular domain-driven management engine for containerized services,
 encrypted secrets, network sidecars, and automated backups.

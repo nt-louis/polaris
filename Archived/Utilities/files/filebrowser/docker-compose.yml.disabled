@@ -9,7 +9,7 @@ services:
       - TZ=${TZ:-America/New_York}
     volumes:
       - /docker:/srv/docker
-      - ${REPO_PATH:-./../../}:/srv/net-stream
+      - ${REPO_PATH:-./../../}:/srv/polaris
       - /mnt/media:/srv/media:rslave
       - ./filebrowser/database:/database
       - ./filebrowser/config:/config
