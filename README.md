@@ -1,5 +1,14 @@
 # Polaris
 
+[![Docker Compose Validation](https://github.com/nt-louis/polaris/actions/workflows/validate-compose.yml/badge.svg)](https://github.com/nt-louis/polaris/actions/workflows/validate-compose.yml)
+[![Python CI](https://github.com/nt-louis/polaris/actions/workflows/python-ci.yml/badge.svg)](https://github.com/nt-louis/polaris/actions/workflows/python-ci.yml)
+[![Secret Leak Protection](https://github.com/nt-louis/polaris/actions/workflows/gitleaks-scan.yml/badge.svg)](https://github.com/nt-louis/polaris/actions/workflows/gitleaks-scan.yml)
+[![Container Security](https://github.com/nt-louis/polaris/actions/workflows/security-scan.yml/badge.svg)](https://github.com/nt-louis/polaris/actions/workflows/security-scan.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![Docker Compose v2](https://img.shields.io/badge/docker%20compose-v2-blue.svg)](https://docs.docker.com/compose/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+
 **Self-Hosted Media and Utilities Infrastructure**
 
 Polaris is a containerized, self-hosted media ecosystem and utility platform featuring Jellyfin, the *Arr suite, Stremio add-ons, AI tools, and productivity applications. It employs a **Nested Gateway** network architecture using VPN sidecars (Gluetun, Tailscale, and Caddy) for network isolation, encrypted mesh connectivity, and zero-trust access control.
@@ -9,6 +18,7 @@ Polaris is a containerized, self-hosted media ecosystem and utility platform fea
 ## Table of Contents
 
 - [Overview](#overview)
+- [Origin & Architectural Evolution](#origin--architectural-evolution)
 - [Key Features](#key-features)
 - [Architecture](#architecture)
   - [Network Topology](#network-topology)
@@ -26,6 +36,20 @@ Polaris is a containerized, self-hosted media ecosystem and utility platform fea
 - [Documentation Directory](#documentation-directory)
 - [Contributing](#contributing)
 - [License](#license)
+
+---
+
+
+## Origin & Architectural Evolution
+
+Polaris began as a personal mission to build a resilient, privacy-first homelab and media ecosystem that could scale across multiple servers without operational chaos. The architecture evolved through six key milestones:
+
+1. **The Monolithic Era (Ad-Hoc Docker)**: Starting with loosely coupled `docker-compose.yml` stacks on a single server, standard bridge networks quickly led to port collisions, unencrypted DNS lookups, and manual maintenance friction.
+2. **The Nested Gateway Era (Network Isolation)**: To eliminate IP leaks and port conflicts, workloads were re-architected into isolated **gateway clusters**. Each cluster resides inside a dedicated VPN sidecar (Gluetun + Tailscale), enforcing a strict intra-gateway `127.0.0.1` binding rule and routing external traffic exclusively through WireGuard or Tailscale MagicDNS.
+3. **The Multi-Node Era (Distributed Mesh)**: As demands scaled, services were partitioned across dedicated nodes (e.g., high-throughput media streamers and downloaders on Node A, developer tools and AI models on Node B). This introduced declarative multi-node topology mapping and automated cross-node health inspections.
+4. **The Secrets Revolution (From `.env` to Doppler SaaS)**: Static `.env` files posed an unacceptable risk of secret leaks. The stack transitioned through SOPS/age cryptographic encryption before standardizing on **Doppler SaaS**, delivering process-level runtime injection and transient `0600` in-memory files with zero production secrets stored at rest on disk.
+5. **The Polaris Engine (Python Orchestrator & Cyber-Slate TUI)**: Scattered shell scripts were consolidated into a unified Python orchestration engine (`./manage.py` and the `polaris` CLI). It features directed acyclic graph (DAG) dependency sequencing, automated Restic volume snapshots, git pre-commit security guards, and a full-screen Cyber-Slate terminal dashboard.
+6. **The Open-Source Milestone**: Polaris was decoupled from private operational state into a clean, standalone repository to provide the self-hosted community with an enterprise-grade blueprint for secure homelab infrastructure.
 
 ---
 
@@ -290,4 +314,5 @@ Contributions, bug reports, and feature requests are welcome. Please ensure that
 
 ## License
 
-This project is provided for personal and educational use. See individual service licenses for underlying containerized components.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Individual containerized services are governed by their respective upstream open-source licenses.
