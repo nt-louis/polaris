@@ -1,0 +1,15 @@
+services:
+  usenetstreamer:
+    image: ghcr.io/sanket9225/usenetstreamer:latest
+    container_name: usenetstreamer
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+    environment:
+      PORT: 7002
+      ADDON_SHARED_SECRET: vibrant-legacy-system-alpha-delta-zeta
+      ADDON_BASE_URL: https://usenetstreamer.example.com
+      NZBDAV_URL: http://127.0.0.1:3000
+      NZBDAV_WEBDAV_URL: http://127.0.0.1:3000
+      CONFIG_DIR: /data/config
+    volumes:
+      - ./config:/data/config

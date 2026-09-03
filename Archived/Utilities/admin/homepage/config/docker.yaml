@@ -1,0 +1,7 @@
+var-docker:
+  host: 127.0.0.1
+  port: 2375
+
+vps-b-docker:
+  host: ${VPS_B_TAILSCALE_IP}
+  port: 2375

@@ -1,0 +1,36 @@
+:80 {
+    redir /adguard /adguard/
+    handle_path /adguard/* {
+        reverse_proxy 127.0.0.1:3000
+    }
+
+    # Handle DNS-over-HTTPS (Internal handoff to AdGuard's encryption port)
+    handle /dns-query* {
+        reverse_proxy https://127.0.0.1:3443 {
+            header_up Host adguard.example.com
+            transport http {
+                tls_insecure_skip_verify
+                tls_server_name adguard.example.com
+            }
+        }
+    }
+
+    # Fallback to direct dashboard access for clean subdomains (e.g. adguard.example.com)
+    handle {
+        reverse_proxy 127.0.0.1:3000
+    }
+}
+
+# Keep Tailscale HTTPS for direct access
+https://{$TAILNET_FQDN} {
+    tls {
+        get_certificate tailscale
+    }
+
+    # Handle DNS-over-HTTPS (Unencrypted internal handoff)
+    handle /dns-query* {
+        reverse_proxy 127.0.0.1:3000
+    }
+
+    reverse_proxy 127.0.0.1:3000
+}

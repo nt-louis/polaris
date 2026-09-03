@@ -1,0 +1,725 @@
+# ==============================================================================
+# PUBLIC HOST CADDYFILE SNIPPET (TEMPLATE / EXAMPLE)
+#
+# This file contains example reverse proxy rules for your public-facing
+# Host Caddy (the one running directly on your VPS host).
+# Because we are using the Nested Gateway Pattern with Tailscale,
+# the Host Caddy routes traffic across the Tailnet directly to the
+# isolated Gateway nodes using Tailnet FQDNs (e.g. core.<tailnet>.ts.net)
+# without needing internal port mappings exposed on the host.
+#
+# NOTE: All site blocks use the http:// scheme because TLS is terminated
+# upstream by Cloudflare Tunnels (or external reverse proxy). This prevents
+# Caddy from attempting to auto-provision HTTPS certificates in a tunnel setup.
+#
+# REVIEW RULE: This is a reusable template, not a generated inventory. Before
+# copying a site block, verify that its upstream exists in active compose
+# discovery and that its gateway/path is listed in Docs/TAILSCALE_URLS.md.
+# Several historical examples below intentionally remain for migration
+# reference, including Emby, Readarr, Kavita, Coolify, and Zurg-related routes.
+#
+# NetBird is an exception: its gRPC/control-plane deployment requires native
+# HTTPS and HTTP/2 support. Do not route NetBird through a Cloudflare HTTP/1.1
+# tunnel; use the dedicated native HTTPS configuration described in the
+# NetBird runbooks.
+# ==============================================================================
+
+{
+    # Global Options
+    servers {
+        protocols h1 h2c
+        trusted_proxies static private_ranges
+    }
+}
+
+# ==============================================================================
+# Snippets (Reusable Configuration Blocks)
+# ==============================================================================
+
+# Basic Security Headers
+(base_security) {
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server # Hide Server version for security
+    }
+}
+
+# CORS Snippet for Stremio Addons
+(cors) {
+    @options method OPTIONS
+    handle @options {
+        header Access-Control-Allow-Origin "*"
+        header Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        header Access-Control-Allow-Headers "*"
+        header Access-Control-Max-Age "86400"
+        respond "" 204
+    }
+    header Access-Control-Allow-Origin "*"
+    header Access-Control-Allow-Headers "*"
+}
+
+# Proxy Settings (Pass Real IPs to Containers)
+(proxy_settings) {
+    header_up Host {host}
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-Proto https
+}
+
+# oauth2-proxy Forward Auth Snippet
+(oauth2-proxy) {
+    forward_auth 127.0.0.1:4180 {
+        uri /oauth2/auth
+        copy_headers X-Auth-Request-Preferred-Username>X-WebAuth-User X-Auth-Request-Email X-Auth-Request-User
+
+        @error status 401
+        handle_response @error {
+            redir * /oauth2/start?rd=https://{host}{uri}
+        }
+    }
+}
+
+# Reusable OIDC Protection Snippet
+# Usage: import protected <upstream-target>
+(protected) {
+    handle /oauth2/* {
+        reverse_proxy 127.0.0.1:4180
+    }
+    handle {
+        import oauth2-proxy
+        reverse_proxy {args[0]} {
+            import proxy_settings
+        }
+    }
+}
+
+# ==============================================================================
+# 1. Portals & Host-Local Services
+# ==============================================================================
+
+# PocketID Login Portal
+http://auth.example.com {
+    import base_security
+    reverse_proxy 127.0.0.1:3055 {
+        import proxy_settings
+    }
+}
+
+# Vaultwarden
+http://vault.example.com {
+    import base_security
+    reverse_proxy 127.0.0.1:8088 {
+        import proxy_settings
+    }
+}
+
+# Dockhand
+http://dockhand.example.com {
+    import base_security
+    import protected 127.0.0.1:8000
+}
+
+# Dashboard (Homarr)
+http://home.example.com {
+    import base_security
+    handle {
+        reverse_proxy util.<tailnet-domain>.ts.net:7575 {
+            import proxy_settings
+        }
+    }
+}
+
+# Yamtrack (django-allauth OIDC)
+http://yamtrack.example.com {
+    import base_security
+    reverse_proxy 127.0.0.1:8025 {
+        import proxy_settings
+    }
+}
+
+# FreshRSS
+http://rss.example.com {
+    import base_security
+
+    @api {
+        path /api/*
+    }
+    handle @api {
+        reverse_proxy 127.0.0.1:8020 {
+            import proxy_settings
+        }
+    }
+
+    import protected 127.0.0.1:8020
+}
+
+# ==============================================================================
+# 2. Core Media Stack (`core` gateway)
+# ==============================================================================
+
+# Jellyfin
+http://jellyfin.example.com {
+    reverse_proxy core.<tailnet-domain>.ts.net:8096
+}
+
+# Emby
+http://emby.example.com {
+    reverse_proxy core.<tailnet-domain>.ts.net:8091
+}
+
+# Nodecast-TV
+http://nodecast.example.com {
+    reverse_proxy core.<tailnet-domain>.ts.net:3010
+}
+
+# Seerr (Media Requests)
+http://seerr.example.com {
+    reverse_proxy core.<tailnet-domain>.ts.net:5055
+}
+
+# Remux
+http://remux.example.com {
+    reverse_proxy core.<tailnet-domain>.ts.net:3000
+}
+
+# Monochrome (Music Player)
+http://music.example.com {
+    import base_security
+    import protected core.<tailnet-domain>.ts.net:4173
+}
+
+# Tracearr
+http://tracearr.example.com {
+    import base_security
+    import protected core.<tailnet-domain>.ts.net:3015
+}
+
+# Autobrr
+http://autobrr.example.com {
+    import base_security
+    import protected core.<tailnet-domain>.ts.net:7474
+}
+
+# Dispatcharr
+http://dispatcharr.example.com {
+    import base_security
+    import protected core.<tailnet-domain>.ts.net:9191
+}
+
+# aMuTorrent
+http://amutorrent.example.com {
+    import base_security
+    import protected core.<tailnet-domain>.ts.net:4000
+}
+
+# Readarr (Books)
+http://readarr-books.example.com {
+    import base_security
+    import protected core.<tailnet-domain>.ts.net:8787
+}
+
+# Readarr (Audiobooks)
+http://readarr-audiobooks.example.com {
+    import base_security
+    import protected core.<tailnet-domain>.ts.net:8789
+}
+
+# ==============================================================================
+# 3. Stremio & Media Addons (`addons`, `stremio-util`, & `proton` gateways)
+# ==============================================================================
+
+# Comet (Stremio addon — /configure path protected)
+http://comet.example.com {
+    import base_security
+
+    handle /oauth2/* {
+        reverse_proxy 127.0.0.1:4180
+    }
+
+    @protected {
+        path /configure /configure/*
+    }
+    handle @protected {
+        import oauth2-proxy
+        reverse_proxy addons.<tailnet-domain>.ts.net:8800 {
+            import proxy_settings
+        }
+    }
+
+    handle {
+        reverse_proxy addons.<tailnet-domain>.ts.net:8800 {
+            import proxy_settings
+        }
+    }
+}
+
+# Jackett
+http://jackett.example.com {
+    import base_security
+    reverse_proxy stremio-util.<tailnet-domain>.ts.net:9117 {
+        import proxy_settings
+    }
+}
+
+# Watchly
+http://watchly.example.com {
+    import base_security
+    reverse_proxy addons.<tailnet-domain>.ts.net:8010 {
+        import proxy_settings
+    }
+}
+
+# MediaFlow Proxy
+http://mf-proxy.example.com {
+    import base_security
+    reverse_proxy stremio-util.<tailnet-domain>.ts.net:8888 {
+        import proxy_settings
+    }
+}
+
+# Syncio
+http://syncio.example.com {
+    import base_security
+    import protected stremio-util.<tailnet-domain>.ts.net:3000
+}
+
+# Scrob
+http://scrob.example.com {
+    import base_security
+    import protected stremio-util.<tailnet-domain>.ts.net:7330
+}
+
+# AIOMetadata (configure path protected)
+http://aiometadata.example.com {
+    import base_security
+
+    handle /oauth2/* {
+        reverse_proxy 127.0.0.1:4180
+    }
+
+    @protected {
+        path /configure /configure/*
+    }
+    handle @protected {
+        import oauth2-proxy
+        reverse_proxy proton.<tailnet-domain>.ts.net:3232 {
+            import proxy_settings
+        }
+    }
+
+    handle {
+        reverse_proxy proton.<tailnet-domain>.ts.net:3232 {
+            import proxy_settings
+        }
+    }
+}
+
+# AIOManager
+http://aiomanager.example.com {
+    import base_security
+    import protected proton.<tailnet-domain>.ts.net:1610
+}
+
+# UsenetStreamer
+http://usenetstreamer.example.com {
+    reverse_proxy addons.<tailnet-domain>.ts.net:7002
+}
+
+# NZBDav
+http://nzbdav.example.com {
+    import base_security
+    reverse_proxy addons.<tailnet-domain>.ts.net:3000 {
+        import proxy_settings
+    }
+}
+
+# AIOStreams
+http://aiostreams.example.com {
+    import base_security
+    reverse_proxy addons.<tailnet-domain>.ts.net:3004 {
+        import proxy_settings
+    }
+}
+
+# StremThru (configure & sidekick paths protected)
+http://stremthru.example.com {
+    import base_security
+
+    handle /oauth2/* {
+        reverse_proxy 127.0.0.1:4180
+    }
+
+    @protected {
+        path /stremio/list/configure /stremio/list/configure/*
+        path /stremio/wrap/configure /stremio/wrap/configure/*
+        path /stremio/store/configure /stremio/store/configure/*
+        path /stremio/torz/configure /stremio/torz/configure/*
+        path /stremio/newz/configure /stremio/newz/configure/*
+        path /stremio/sidekick /stremio/sidekick/*
+    }
+    handle @protected {
+        import oauth2-proxy
+        reverse_proxy addons.<tailnet-domain>.ts.net:8080 {
+            import proxy_settings
+        }
+    }
+
+    handle {
+        reverse_proxy addons.<tailnet-domain>.ts.net:8080 {
+            import proxy_settings
+        }
+    }
+}
+
+# StreamNZB
+http://streamnzb.example.com {
+    import base_security
+    reverse_proxy addons.<tailnet-domain>.ts.net:7000 {
+        import proxy_settings
+    }
+}
+
+# NZBHydra2
+http://nzbhydra2.example.com {
+    import base_security
+    import protected addons.<tailnet-domain>.ts.net:5076
+}
+
+# ==============================================================================
+# 4. Books & Comics Stack (`comics` gateway)
+# ==============================================================================
+
+# Audiobookshelf
+http://audiobookshelf.example.com {
+    import base_security
+    reverse_proxy comics.<tailnet-domain>.ts.net:13378 {
+        import proxy_settings
+    }
+}
+
+# Kavita
+http://kavita.example.com {
+    import base_security
+    import protected comics.<tailnet-domain>.ts.net:5000
+}
+
+# Grimmory
+http://grimmory.example.com {
+    import base_security
+    reverse_proxy comics.<tailnet-domain>.ts.net:6060 {
+        import proxy_settings
+    }
+}
+
+# Suwayomi (Manga Reader)
+http://suwayomi.example.com {
+    import base_security
+    reverse_proxy comics.<tailnet-domain>.ts.net:4567 {
+        import proxy_settings
+    }
+}
+
+# Shelfmark
+http://shelfmark.example.com {
+    import base_security
+    import protected comics.<tailnet-domain>.ts.net:8084
+}
+
+# Athenaeum
+http://athenaeum.example.com {
+    import base_security
+    reverse_proxy comics.<tailnet-domain>.ts.net:8741 {
+        import proxy_settings
+    }
+}
+
+# Bindery
+http://bindery.example.com {
+    import base_security
+    import protected comics.<tailnet-domain>.ts.net:8787
+}
+
+# ==============================================================================
+# 5. Anime Stack (`proton` gateway)
+# ==============================================================================
+
+# Seanime
+http://seanime.example.com {
+    import base_security
+    import protected proton.<tailnet-domain>.ts.net:43211
+}
+
+# ==============================================================================
+# 6. Utilities & Infrastructure Stack (`util` gateway)
+# ==============================================================================
+
+# FMHY
+http://fmhy.example.com {
+    import base_security
+    reverse_proxy util.<tailnet-domain>.ts.net:4173 {
+        import proxy_settings
+    }
+}
+
+# Open WebUI
+http://openwebui.example.com {
+    import base_security
+    import protected stremio-util.<tailnet-domain>.ts.net:8080
+}
+
+# Opencode Web
+http://opencode.example.com {
+	import base_security
+
+	# 1. Handle OAuth2 Proxy Callback Routes
+	handle /oauth2/* {
+		reverse_proxy 127.0.0.1:4180
+	}
+
+	# 2. Protected Proxy to OpenCode
+	handle {
+		import oauth2-proxy
+		reverse_proxy {VPS-2 IP}:4097 {
+			import proxy_settings
+			# Pre-encoded Base64 string for 'opencode:SERVER_PASSWORD'
+			header_up Authorization "Basic b3BlbmNvZGU6OW..."
+		}
+	}
+}
+
+# WUD (What's Up Docker)
+http://wud.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:3009
+}
+
+# Uptime Kuma
+http://status.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:3005
+}
+
+# File Browser
+http://files.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:8089
+}
+
+# Portainer
+http://portainer.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:9000
+}
+
+# IT-Tools
+http://it-tools.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:8085
+}
+
+# SearXNG
+http://search.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:8082
+}
+
+# Dozzle Logs
+http://logs.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:8086
+}
+
+# BentoPDF
+http://bento-pdf.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:8080
+}
+
+# Stirling-PDF
+http://pdf.example.com {
+    import base_security
+    reverse_proxy util.<tailnet-domain>.ts.net:8083 {
+        import proxy_settings
+    }
+}
+
+# ConvertX
+http://convertx.example.com {
+    import base_security
+    import protected 127.0.0.1:3011
+}
+
+# Linkwarden
+http://linkwarden.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:3008
+}
+
+# Pingvin Share
+http://share.example.com {
+    import base_security
+    import protected 127.0.0.1:3030
+}
+
+# Memos
+http://memos.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:5230
+}
+
+# n8n
+http://n8n.example.com {
+    import base_security
+    @webhooks {
+        path /webhook/*
+        path /webhook-test/*
+        path /webhook-waiting/*
+    }
+    handle @webhooks {
+        reverse_proxy util.<tailnet-domain>.ts.net:5678 {
+            import proxy_settings
+        }
+    }
+    import protected util.<tailnet-domain>.ts.net:5678
+}
+
+# Apprise
+http://apprise.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:8000
+}
+
+# Paperless-ngx
+http://paperless.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:8084
+}
+
+# Beszel
+http://beszel.example.com {
+    import base_security
+    import protected util.<tailnet-domain>.ts.net:8090
+}
+
+# ==============================================================================
+# 7. Global Network & Cloud (`dns-gateway` & `cloud` gateways)
+# ==============================================================================
+
+# AdGuard Home
+http://adguard.example.com {
+    import base_security
+    import protected dns-gateway.<tailnet-domain>.ts.net:80
+}
+
+# Nextcloud
+http://nextcloud.example.com {
+    import base_security
+    header Strict-Transport-Security "max-age=15552000;"
+    redir /.well-known/carddav /remote.php/dav 301
+    redir /.well-known/caldav /remote.php/dav 301
+    reverse_proxy cloud.<tailnet-domain>.ts.net:8080 {
+        import proxy_settings
+    }
+}
+
+# NetBird Control Plane
+http://netbird.example.com {
+    import base_security
+
+    @grpc_mgmt {
+        header Content-Type application/grpc*
+        path /management.ManagementService/*
+    }
+    reverse_proxy @grpc_mgmt 127.0.0.1:33073 {
+        transport http {
+            versions h2c
+        }
+    }
+
+    @grpc_signal {
+        header Content-Type application/grpc*
+        path /signalexchange.SignalExchange/*
+    }
+    reverse_proxy @grpc_signal 127.0.0.1:10000 {
+        transport http {
+            versions h2c
+        }
+    }
+
+    @ws_proxy {
+        path /ws-proxy/*
+    }
+    reverse_proxy @ws_proxy 127.0.0.1:33073 {
+        import proxy_settings
+    }
+
+    @rest_api {
+        path /api/*
+    }
+    reverse_proxy @rest_api 127.0.0.1:33073 {
+        import proxy_settings
+    }
+
+    reverse_proxy 127.0.0.1:30080 {
+        import proxy_settings
+    }
+}
+
+http://relay.netbird.example.com {
+    import base_security
+    reverse_proxy 127.0.0.1:33080 {
+        import proxy_settings
+    }
+}
+
+http://proxy.netbird.example.com {
+    import base_security
+    reverse_proxy 127.0.0.1:33443 {
+        import proxy_settings
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+}
+
+# ==============================================================================
+# 8. VPS B Developer Stack (`util-b` & `vps2` gateways)
+# ==============================================================================
+
+# Penpot
+http://penpot.example.com {
+    import base_security
+    import protected util-b.<tailnet-domain>.ts.net:80
+}
+
+# Excalidraw
+http://excalidraw.example.com {
+    import base_security
+    import protected util-b.<tailnet-domain>.ts.net:80
+}
+
+# Supabase Studio (UI)
+http://supabase.example.com {
+    import base_security
+    import protected util-b.<tailnet-domain>.ts.net:80
+}
+
+# Supabase API (Kong Gateway)
+http://supabase-api.example.com {
+    import base_security
+    import protected util-b.<tailnet-domain>.ts.net:80
+}
+
+# Coolify
+http://coolify.example.com {
+    import base_security
+    import protected vps2.<tailnet-domain>.ts.net:8000
+}
+
+# Infisical
+http://infisical.example.com {
+    import base_security
+    import protected util-b.<tailnet-domain>.ts.net:80
+}

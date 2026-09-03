@@ -1,0 +1,5 @@
+-r requirements.txt
+
+# Test and lint tooling used by GitHub Actions and local development.
+pytest==9.1.1
+ruff==0.16.5

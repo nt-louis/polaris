@@ -1,0 +1,32 @@
+services:
+  redis:
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -p 6380 ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: redis:7-alpine
+    container_name: watchly-redis
+    labels:
+      - "wud.tag.include=^7(\\.\\d+)*-alpine$"
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+    command: redis-server --port 6380
+    volumes:
+      - ./data/redis:/data
+
+  watchly:
+    image: ghcr.io/timilsinabimal/watchly:latest
+    container_name: watchly
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+
+    env_file:
+      - .env
+    environment:
+      - PORT=8010
+      - REDIS_URL=redis://127.0.0.1:6380/0
+      - TOKEN_SALT=${TOKEN_SALT}
+    depends_on:
+      - redis
+

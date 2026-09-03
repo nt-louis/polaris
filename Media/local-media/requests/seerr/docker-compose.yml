@@ -1,0 +1,15 @@
+services:
+  seerr:
+    image: ghcr.io/seerr-team/seerr:v3.4.1
+    init: true
+    container_name: seerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ}
+      - PORT=5055
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config:/app/config
+    healthcheck:
+      disable: true
+    restart: unless-stopped

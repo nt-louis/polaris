@@ -1,0 +1,112 @@
+# Listen on port 80 and Tailnet FQDN
+http://{$TAILNET_FQDN}, :80, {$TAILNET_FQDN} {
+    tls {
+        get_certificate tailscale
+    }
+    redir /jellyfin /jellyfin/
+    handle_path /jellyfin/* {
+        reverse_proxy 127.0.0.1:8096
+    }
+ 
+    # redir /emby /emby/
+    # handle_path /emby/* {
+    #     reverse_proxy 127.0.0.1:8091
+    # }
+ 
+    # redir /dispatcharr /dispatcharr/
+    # handle_path /dispatcharr/* {
+    #     reverse_proxy 127.0.0.1:9191
+    # }
+
+    redir /prowlarr /prowlarr/
+    handle_path /prowlarr/* {
+        reverse_proxy 127.0.0.1:9696
+    }
+
+    redir /radarr /radarr/
+    handle_path /radarr/* {
+        reverse_proxy 127.0.0.1:7878
+    }
+
+    redir /sonarr /sonarr/
+    handle_path /sonarr/* {
+        reverse_proxy 127.0.0.1:8989
+    }
+
+
+    # redir /bazarr /bazarr/
+    # handle_path /bazarr/* {
+    #     reverse_proxy 127.0.0.1:6767
+    # }
+
+    # redir /lidarr /lidarr/
+    # handle_path /lidarr/* {
+    #     reverse_proxy 127.0.0.1:8686
+    # }
+
+    redir /qbittorrent /qbittorrent/
+    handle_path /qbittorrent/* {
+        reverse_proxy 127.0.0.1:8080
+    }
+
+    redir /sabnzbd /sabnzbd/
+    handle_path /sabnzbd/* {
+        reverse_proxy 127.0.0.1:8085
+    }
+
+    redir /amutorrent /amutorrent/
+    handle_path /amutorrent/* {
+        reverse_proxy 127.0.0.1:4000
+    }
+
+    # redir /decypharr /decypharr/
+    # handle_path /decypharr/* {
+    #     reverse_proxy 127.0.0.1:8282
+    # }
+
+    redir /seerr /seerr/
+    handle_path /seerr/* {
+        reverse_proxy 127.0.0.1:5055
+    }
+
+    # redir /autobrr /autobrr/
+    # handle_path /autobrr/* {
+    #     reverse_proxy 127.0.0.1:7474
+    # }
+
+    redir /flaresolverr /flaresolverr/
+    handle_path /flaresolverr/* {
+        reverse_proxy 127.0.0.1:8191
+    }
+
+    redir /tracearr /tracearr/
+    handle_path /tracearr/* {
+        reverse_proxy 127.0.0.1:3015
+    }
+
+    redir /remux /remux/
+    handle_path /remux/* {
+        reverse_proxy 127.0.0.1:3000
+    }
+
+    # redir /arr-dashboard /arr-dashboard/
+    # handle_path /arr-dashboard/* {
+    #     reverse_proxy 127.0.0.1:3010
+    # }
+
+    # redir /plex /plex/
+
+    # handle_path /plex/* {
+    #     reverse_proxy 127.0.0.1:32400
+    # }
+
+    redir /prismedia /prismedia/
+    handle_path /prismedia/* {
+        reverse_proxy 127.0.0.1:8008
+    }
+
+
+    handle {
+        respond "Media gateway is running." 200
+    }
+}

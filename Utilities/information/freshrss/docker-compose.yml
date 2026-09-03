@@ -1,0 +1,17 @@
+services:
+  freshrss:
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit((int) (@get_headers('http://127.0.0.1/') === false));"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: freshrss/freshrss:1.29.1
+    container_name: freshrss
+    ports:
+      - "127.0.0.1:8020:80"
+    volumes:
+      - ./data:/var/www/FreshRSS/data
+    environment:
+      - TZ=${TZ:-America/New_York}
+      - CRON_MIN=*/20
+    restart: unless-stopped

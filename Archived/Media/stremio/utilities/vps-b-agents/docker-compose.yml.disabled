@@ -1,0 +1,30 @@
+services:
+  portainer-agent:
+    image: portainer/agent:2.19.4
+    container_name: portainer-agent-vps-b
+    restart: always
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+
+  dozzle-agent:
+    image: amir20/dozzle:latest
+    container_name: dozzle-agent-vps-b
+    command: agent
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: docker-socket-proxy-vps-b
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CONTAINERS=1
+      - SERVICES=0
+      - POST=0

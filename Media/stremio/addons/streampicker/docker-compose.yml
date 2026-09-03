@@ -1,0 +1,36 @@
+services:
+  stream-picker:
+    image: ghcr.io/arah91-bit/streampicker:latest
+    container_name: stream-picker
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 45s
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    tmpfs:
+      - /tmp:rw,nosuid,noexec,size=256m
+    network_mode: "container:media-gateway-proton-gluetun"
+    env_file:
+      - .env
+    environment:
+      ADDON_SECRET: "${ADDON_SECRET}"
+      CONFIG_ENCRYPTION_KEY_FILE: /run/secrets/stream_picker_config_key
+
+    volumes:
+      - ./data:/data
+      - ./secrets/stream-picker-config.key:/run/secrets/stream_picker_config_key:ro
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/health/ready', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

@@ -1,0 +1,10 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
+    volumes:
+      - ./config:/app/config
+    restart: unless-stopped

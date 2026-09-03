@@ -1,0 +1,18 @@
+services:
+  uptime-kuma:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3005/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: louislam/uptime-kuma:2.5.3
+    container_name: uptime-kuma
+    labels:
+      - "wud.tag.include=^2(\\.\\d+)*$"
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - PORT=3005
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

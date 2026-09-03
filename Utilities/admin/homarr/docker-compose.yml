@@ -1,0 +1,29 @@
+services:
+  homarr:
+    container_name: homarr
+    image: ghcr.io/homarr-labs/homarr:latest
+    restart: unless-stopped
+    # Share the Tailscale-enabled utilities gateway namespace.
+    network_mode: "container:utilities-gateway-gluetun"
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./data:/appdata
+      - ./nginx.conf.template:/etc/nginx/templates/nginx.conf:ro
+    environment:
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+      - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_PROVIDERS=${AUTH_PROVIDERS:-oidc,credentials}
+      - AUTH_TRUST_HOST=true
+      - AUTH_URL=${HOMARR_URL}
+      - AUTH_OIDC_ISSUER=${AUTH_OIDC_ISSUER}
+      - AUTH_OIDC_CLIENT_ID=${AUTH_OIDC_CLIENT_ID}
+      - AUTH_OIDC_CLIENT_SECRET=${AUTH_OIDC_CLIENT_SECRET}
+      - AUTH_OIDC_CLIENT_NAME=${AUTH_OIDC_CLIENT_NAME:-PocketID}
+      - AUTH_OIDC_AUTO_LOGIN=${AUTH_OIDC_AUTO_LOGIN:-true}
+      - AUTH_OIDC_ENABLE_DANGEROUS_ACCOUNT_LINKING=${AUTH_OIDC_ENABLE_DANGEROUS_ACCOUNT_LINKING:-false}
+      - AUTH_OIDC_GROUPS_ATTRIBUTE=${AUTH_OIDC_GROUPS_ATTRIBUTE:-groups}
+      - AUTH_OIDC_SCOPE_OVERWRITE=${AUTH_OIDC_SCOPE_OVERWRITE:-openid email profile groups}
+    command: ["sh", "-c", "printf 'nameserver 127.0.0.11\\n' > /etc/resolv.conf && exec sh run.sh"]

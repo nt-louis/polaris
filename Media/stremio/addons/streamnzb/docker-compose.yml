@@ -1,0 +1,8 @@
+services:
+  streamnzb:
+    image: ghcr.io/gaisberg/streamnzb:latest
+    container_name: streamnzb
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+    volumes:
+      - ./config:/app/data

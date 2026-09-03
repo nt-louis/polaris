@@ -1,0 +1,43 @@
+services:
+  dmm-db:
+    image: mariadb:10.11
+    container_name: dmm-db
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DMM_MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DMM_MYSQL_DATABASE:-dmm}
+      - MYSQL_USER=${DMM_MYSQL_USER:-dmm}
+      - MYSQL_PASSWORD=${DMM_MYSQL_PASSWORD}
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dmm-tor:
+    image: debridmediamanager/tor:latest
+    container_name: dmm-tor
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+
+  dmm-web:
+    image: debridmediamanager/debrid-media-manager:latest
+    container_name: dmm-web
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    depends_on:
+      dmm-db:
+        condition: service_healthy
+      dmm-tor:
+        condition: service_started
+    environment:
+      - DATABASE_URL=mysql://${DMM_MYSQL_USER:-dmm}:${DMM_MYSQL_PASSWORD}@127.0.0.1:3306/${DMM_MYSQL_DATABASE:-dmm}
+      - PORT=3001
+      - NEXTAUTH_URL=${DMM_NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${DMM_NEXTAUTH_SECRET}
+      - REALDEBRID_CLIENT_ID=${REALDEBRID_CLIENT_ID}
+      - REALDEBRID_CLIENT_SECRET=${REALDEBRID_CLIENT_SECRET}
+      - TOR_PROXY=socks5://127.0.0.1:9050

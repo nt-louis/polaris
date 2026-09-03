@@ -1,0 +1,31 @@
+/* Custom Premium Styles for Homepage Dashboard */
+
+:root {
+  --theme-radius: 12px;
+}
+
+/* Enable backdrop blur on all cards for glassmorphism */
+.card-theme {
+  background-color: rgba(20, 20, 25, 0.45) !important;
+  backdrop-filter: blur(12px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+/* Smooth scale and glow micro-animations on hover */
+.card-theme:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  border-color: rgba(0, 229, 255, 0.25) !important;
+  box-shadow: 0 8px 30px rgba(0, 229, 255, 0.15) !important;
+}
+
+/* Premium gradient accents on groups/headers */
+.group-header {
+  font-family: 'Outfit', sans-serif !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-bottom: 2px solid rgba(0, 229, 255, 0.3) !important;
+  padding-bottom: 4px !important;
+}

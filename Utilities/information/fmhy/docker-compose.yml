@@ -1,0 +1,8 @@
+services:
+  fmhy:
+    image: local/fmhy:latest
+    container_name: fmhy
+    network_mode: "container:utilities-gateway-gluetun"
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped

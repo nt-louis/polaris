@@ -1,0 +1,15 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    ports:
+      - "127.0.0.1:8088:8088"
+    environment:
+      - ROCKET_PORT=8088
+      - WEBSOCKET_ENABLED=true
+      - TZ=${TZ:-America/New_York}
+      - SIGNUPS_ALLOWED=true
+      - DOMAIN=${VAULTWARDEN_DOMAIN}
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

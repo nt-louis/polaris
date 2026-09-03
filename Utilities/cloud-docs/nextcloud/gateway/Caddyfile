@@ -1,0 +1,13 @@
+{$TAILNET_FQDN} {
+    tls {
+        get_certificate tailscale
+    }
+
+    # CalDAV / CardDAV Auto-Discovery redirects for internal Tailnet sync
+    redir /.well-known/carddav /remote.php/dav 301
+    redir /.well-known/caldav /remote.php/dav 301
+
+    handle {
+        reverse_proxy 127.0.0.1:8080
+    }
+}

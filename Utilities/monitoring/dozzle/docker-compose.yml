@@ -1,0 +1,11 @@
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - DOZZLE_ADDR=:8086
+      - TZ=${TZ:-America/New_York}
+      - DOZZLE_REMOTE_HOSTS=tcp://stremio-util:7007
+      - DOCKER_HOST=tcp://127.0.0.1:2375
+    restart: unless-stopped

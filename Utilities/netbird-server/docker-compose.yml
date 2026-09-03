@@ -1,0 +1,112 @@
+services:
+  # NetBird Dashboard (Web UI Portal)
+  dashboard:
+    image: netbirdio/dashboard:latest
+    container_name: netbird-server-dashboard
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:30080:80"
+    environment:
+      - NETBIRD_MGMT_API_ENDPOINT=https://${NETBIRD_DOMAIN}
+      - NETBIRD_MGMT_GRPC_API_ENDPOINT=https://${NETBIRD_DOMAIN}
+      - AUTH_AUDIENCE=${OIDC_CLIENT_ID}
+      - AUTH_CLIENT_ID=${OIDC_CLIENT_ID}
+      - AUTH_AUTHORITY=${OIDC_ISSUER}
+      - USE_AUTH0=false
+      - AUTH_SUPPORTED_SCOPES=openid profile email
+      - AUTH_REDIRECT_URI=/nb-auth
+      - AUTH_SILENT_REDIRECT_URI=/nb-silent-auth
+      - NETBIRD_TOKEN_SOURCE=idToken
+    networks:
+      - netbird_net
+
+  # NetBird Signal (WebRTC Peer Negotiation)
+  signal:
+    image: netbirdio/signal:latest
+    container_name: netbird-server-signal
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:10000:10000"
+    volumes:
+      - ./data/signal:/var/lib/netbird
+    networks:
+      - netbird_net
+
+  # NetBird Relay (Fallback routing mechanism)
+  relay:
+    image: netbirdio/relay:latest
+    container_name: netbird-server-relay
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:33080:33080"
+    environment:
+      - NB_LOG_LEVEL=info
+      - NB_LISTEN_ADDRESS=:33080
+      - NB_EXPOSED_ADDRESS=relay.${NETBIRD_DOMAIN}:443
+      - NB_AUTH_SECRET=${NETBIRD_RELAY_SECRET}
+    networks:
+      - netbird_net
+
+  # NetBird Management (Core DB & Policies Orchestrator)
+  management:
+    image: netbirdio/management:latest
+    container_name: netbird-server-management
+    restart: unless-stopped
+    depends_on:
+      - dashboard
+    ports:
+      - "127.0.0.1:33073:33073"
+    volumes:
+      - ./data/management:/var/lib/netbird
+      - ./management.json:/etc/netbird/management.json:ro
+    command: [
+      "--port", "33073",
+      "--log-file", "console",
+      "--log-level", "info",
+      "--disable-anonymous-metrics=true",
+      "--dns-domain=${NETBIRD_DNS_DOMAIN:-netbird.selfhosted}"
+    ]
+    networks:
+      - netbird_net
+
+  # Coturn (STUN/TURN server for NAT traversal)
+  coturn:
+    image: coturn/coturn:latest
+    container_name: netbird-server-coturn
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./turnserver.conf:/etc/turnserver.conf:ro
+    command:
+      - -c /etc/turnserver.conf
+    network_mode: host
+
+  # NetBird App Reverse Proxy
+  proxy:
+    image: netbirdio/reverse-proxy:latest
+    container_name: netbird-server-proxy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:33443:443"
+    environment:
+      - NB_PROXY_MANAGEMENT_ADDRESS=http://management:33073
+      - NB_PROXY_DOMAIN=proxy.${NETBIRD_DOMAIN}
+      - NB_PROXY_TOKEN=${NB_PROXY_TOKEN}
+      - NB_PROXY_ALLOW_INSECURE=true
+      - NB_PROXY_ACME_CERTIFICATES=false
+      - NB_PROXY_PRIVATE=true
+      - NB_PROXY_ADDRESS=:443
+      - NB_PROXY_CERTIFICATE_DIRECTORY=/certs
+      - NB_PROXY_LOG_LEVEL=info
+    volumes:
+      - netbird_proxy_certs:/certs
+    networks:
+      - netbird_net
+
+networks:
+  netbird_net:
+    name: netbird_net
+
+volumes:
+  netbird_proxy_certs:

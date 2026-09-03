@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+#
+# pre-commit hook (net-stream)
+#
+# Defense-in-depth guard that runs for EVERY committer — pi agent, humans,
+# CI — independent of the pi extension layer. Blocks staging of:
+#   - decrypted runtime secrets: .env, .env.vps-a, .env.vps-b, keys.txt,
+#     anything under secrets/
+#   - live runtime state: state/, data/, logs/, cache/, letsencrypt/,
+#     mariadb/, *.db / *.sqlite* (+ SQLite sidecars), Archived/
+#
+# Allowed (intentionally NOT blocked):
+#   - plaintext templates: .env.example, *.env.example
+#   - committed ciphertext: .env.enc, .env.vps-a.enc, .env.vps-b.enc
+#
+# Install with: ./manage.py hooks install
+# Bypass for a known-good commit: git commit --no-verify (deliberate escape hatch).
+#
+# Pure stdlib bash, no external dependencies.
+
+set -euo pipefail
+
+# Patterns matched against the staged path (relative, POSIX separators).
+# Order matters only for readability; each is an extended regex.
+BLOCK_PATTERNS=(
+	# Decrypted SOPS runtime env files (exact or as final segment).
+	'(^|/)\.env$'
+	'(^|/)\.env\.vps-a$'
+	'(^|/)\.env\.vps-b$'
+	# SOPS age private key.
+	'(^|/)keys\.txt$'
+	# Anything under a secrets/ directory.
+	'(^|/)secrets/'
+	# Live runtime state trees.
+	'(^|/)state/'
+	'(^|/)data/'
+	'(^|/)logs/'
+	'(^|/)cache/'
+	'(^|/)letsencrypt/'
+	'(^|/)mariadb/'
+	# Any unencrypted files under .snapshots/
+	'(^|/)\.snapshots/'
+	# Databases + SQLite sidecars (-wal/-shm/-journal).
+	'\.db(-wal2?|-shm|-journal)?$'
+	'\.sqlite3?$'
+	# Historical / decommissioned stacks (AGENTS.md: never modify Archived/).
+	'(^|/)Archived/'
+)
+
+# Plaintext templates, committed ciphertext, and archived scripts/docs are allowed.
+ALLOW_PATTERNS=(
+	'\.env\.example$'
+	'\.env\.enc$'
+	'\.env\.vps-a\.enc$'
+	'\.env\.vps-b\.enc$'
+	'(^|/)\.snapshots/.*\.env\.enc$'
+	'^Archived/.*\.(sh|py|md|txt|json|yaml|yml)$'
+	'^orchestrator/secrets/.*\.py$'
+)
+
+is_blocked() {
+	local path="$1"
+	# Allow-list wins (templates / ciphertext).
+	local pat
+	for pat in "${ALLOW_PATTERNS[@]}"; do
+		if [[ "$path" =~ $pat ]]; then
+			return 1
+		fi
+	done
+	for pat in "${BLOCK_PATTERNS[@]}"; do
+		if [[ "$path" =~ $pat ]]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Staged paths (added/copied/modified/renamed). --no-renames keeps output stable.
+if ! staged=$(git diff --cached --name-only --diff-filter=ACMR --no-renames -- 2>/dev/null); then
+	echo "pre-commit: failed to read staged paths; refusing to run commit." >&2
+	exit 1
+fi
+
+violations=()
+while IFS= read -r line; do
+	[ -z "$line" ] && continue
+	if is_blocked "$line"; then
+		violations+=("$line")
+	fi
+done <<< "$staged"
+
+if [ ${#violations[@]} -eq 0 ]; then
+	exit 0
+fi
+
+cat >&2 <<'EOF'
+
+[pre-commit] BLOCKED — staged files contain runtime secrets or live state.
+
+These files must never be committed:
+EOF
+{
+	for v in "${violations[@]}"; do
+		echo "  - $v"
+	done
+} >&2
+
+cat >&2 <<'EOF'
+
+How to fix:
+  - Decrypted secrets (.env / .env.vps-* / keys.txt):
+      ./manage.py secrets encrypt        # re-encrypt, then `git status` should clear
+  - Databases / state/ / data/ / Archived/:
+      unstage and use ./manage.py backup for volume snapshots instead
+  - If this block is a false positive and you are certain the file is safe to
+    commit, bypass with: git commit --no-verify
+
+EOF
+exit 1

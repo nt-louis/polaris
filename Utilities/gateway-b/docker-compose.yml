@@ -1,0 +1,47 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:v1.102.3
+    container_name: utilities-gateway-b-tailscale
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_HOSTNAME=${TS_HOSTNAME}
+      - TS_EXTRA_ARGS=--accept-routes=false --accept-dns=false
+      - TS_SOCKET=/var/run/tailscale/tailscaled.sock
+    volumes:
+      - ./state/tailscale:/var/lib/tailscale
+      - tailscale-sock:/var/run/tailscale
+    networks:
+      - vps_b_net
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    container_name: utilities-gateway-b-caddy
+    labels:
+      - "wud.tag.include=^2(\\.\\d+)*-alpine$"
+    environment:
+      - TAILNET_FQDN=${TAILNET_FQDN}
+      - DOMAIN_SUFFIX=${DOMAIN_SUFFIX}
+    network_mode: "service:tailscale"
+    depends_on:
+      - tailscale
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy:/data
+      - ./config/caddy:/config
+      - tailscale-sock:/var/run/tailscale
+    restart: unless-stopped
+
+volumes:
+  tailscale-sock:
+
+networks:
+  vps_b_net:
+    name: vps_b_net

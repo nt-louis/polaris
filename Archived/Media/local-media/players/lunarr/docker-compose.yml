@@ -1,0 +1,17 @@
+services:
+  lunarr:
+    image: sayem314/lunarr:latest
+    container_name: lunarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - PORT=${LUNARR_PORT}
+      - ORIGIN=${LUNARR_ORIGIN}
+      - AUTH_SECRET=${LUNARR_AUTH_SECRET}
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config:/data
+      - ${MEDIA_SHARE}:/media:ro,rslave
+    restart: unless-stopped

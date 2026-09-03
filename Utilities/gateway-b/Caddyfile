@@ -1,0 +1,46 @@
+# Gateway-B Caddyfile
+# Handles routing for VPS B bridge network services
+
+http://penpot.{$DOMAIN_SUFFIX}, http://penpot.util-b.ts.net {
+    reverse_proxy penpot-frontend:8080 {
+        header_up Host {host}
+    }
+}
+
+http://excalidraw.{$DOMAIN_SUFFIX}, http://excalidraw.util-b.ts.net {
+    reverse_proxy excalidraw:80 {
+        header_up Host {host}
+    }
+}
+
+http://supabase.{$DOMAIN_SUFFIX}, http://supabase.util-b.ts.net {
+    reverse_proxy supabase-studio:3000 {
+        header_up Host {host}
+    }
+}
+
+http://supabase-api.{$DOMAIN_SUFFIX} {
+    reverse_proxy supabase-kong:8000 {
+        header_up Host {host}
+    }
+}
+
+http://coolify.{$DOMAIN_SUFFIX}, http://coolify.util-b.ts.net {
+    reverse_proxy coolify:8080 {
+        header_up Host {host}
+    }
+}
+
+http://infisical.{$DOMAIN_SUFFIX}, http://infisical.util-b.ts.net {
+    reverse_proxy infisical-backend:8080 {
+        header_up Host {host}
+    }
+}
+
+# Fallback for checking gateway status
+{$TAILNET_FQDN} {
+    tls {
+        get_certificate tailscale
+    }
+    respond "Gateway-B is running. Services are active on the bridge network." 200
+}

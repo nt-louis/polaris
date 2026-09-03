@@ -1,0 +1,19 @@
+services:
+  decypharr:
+    image: cy01/blackhole:latest
+    container_name: decypharr
+    restart: unless-stopped
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config:/app
+      - ${MEDIA_SHARE}:/share:rshared
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${GUID:-1000}
+      - TZ=${TZ}
+    devices:
+      - /dev/fuse:/dev/fuse:rwm
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined

@@ -1,0 +1,12 @@
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx:latest
+    container_name: convertx
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3011:3000"
+    environment:
+      - JWT_SECRET=${CONVERTX_JWT_SECRET}
+      - HTTP_ALLOWED=true
+    volumes:
+      - ./data:/app/data

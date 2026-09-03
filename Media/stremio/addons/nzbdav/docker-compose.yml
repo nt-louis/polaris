@@ -1,0 +1,67 @@
+services:
+  nzbdav:
+    image: ghcr.io/infinidysk/infinidysk:latest
+    container_name: nzbdav
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+    healthcheck:
+      test: curl -f http://localhost:3000/health || exit 1
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 5s
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - ASPNETCORE_URLS=http://+:8082
+      - BACKEND_URL=http://127.0.0.1:8082
+      - SECURE_COOKIES=${SECURE_COOKIES:-true}
+    volumes:
+      - ./config:/config
+      - /mnt:/mnt
+
+  nzbdav_rclone:
+    image: rclone/rclone:1.75.0
+    container_name: nzbdav_rclone
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+    healthcheck:
+      test: ["CMD-SHELL", "ls /data > /dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=America/New_York
+    volumes:
+      - ${MEDIA_SHARE:-/mnt/media}/nzbdav:/data:shared
+      - ./nzbdav-rclone.conf:/config/rclone/rclone.conf
+      - ./cache:/cache
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse:/dev/fuse:rwm
+    depends_on:
+      nzbdav:
+        condition: service_healthy
+        restart: true
+    command: >
+      mount nzbdav: /data
+        --uid=${PUID:-1000}
+        --gid=${PGID:-1000}
+        --allow-other
+        --allow-non-empty
+        --links
+        --use-cookies
+        --vfs-cache-mode=full
+        --vfs-cache-max-size=20G
+        --vfs-cache-max-age=24h
+        --buffer-size=0M
+        --vfs-read-ahead=512M
+        --dir-cache-time=20s
+        --umask=002
+        --cache-dir=/cache

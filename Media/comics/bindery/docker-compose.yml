@@ -1,0 +1,22 @@
+services:
+  bindery:
+    healthcheck:
+      test: ["CMD", "/bindery", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/vavallee/bindery:v1.33.2
+    container_name: bindery
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      - BINDERY_PUID=${PUID:-1000}
+      - BINDERY_PGID=${PGID:-1000}
+      - TZ=${TZ}
+      - BINDERY_DOWNLOAD_DIR=/share
+      - BINDERY_LIBRARY_DIR=/share/media/Books/Books
+      - BINDERY_AUDIOBOOK_DIR=/share/media/Books/Audiobooks
+    network_mode: "container:media-gateway-comics-gluetun"
+    volumes:
+      - ./config:/config
+      - ${MEDIA_SHARE}:/share
+    restart: unless-stopped

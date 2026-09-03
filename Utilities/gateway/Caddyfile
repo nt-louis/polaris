@@ -1,0 +1,97 @@
+{$TAILNET_FQDN} {
+    tls {
+        get_certificate tailscale
+    }
+    # redir /komodo /komodo/
+    # handle_path /komodo/* {
+    #     reverse_proxy 127.0.0.1:9120
+    # }
+
+    redir /homepage /homepage/
+    handle_path /homepage/* {
+        reverse_proxy 127.0.0.1:3000
+    }
+
+    # n8n now uses dedicated domain
+    handle /n8n* {
+        redir * https://{$N8N_DOMAIN}{uri} permanent
+    }
+
+    redir /apprise /apprise/
+    handle_path /apprise/* {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    redir /portainer /portainer/
+    handle_path /portainer/* {
+        reverse_proxy 127.0.0.1:9000
+    }
+
+    # redir /searxng /searxng/
+    # handle_path /searxng/* {
+    #     reverse_proxy 127.0.0.1:8082
+    # }
+
+    # redir /stirling-pdf /stirling-pdf/
+    # handle_path /stirling-pdf/* {
+    #     reverse_proxy 127.0.0.1:8083
+    # }
+
+    redir /uptime-kuma /uptime-kuma/
+    handle_path /uptime-kuma/* {
+        reverse_proxy 127.0.0.1:3005
+    }
+
+    redir /dozzle /dozzle/
+    handle_path /dozzle/* {
+        reverse_proxy 127.0.0.1:8086
+    }
+
+    # redir /changedetection /changedetection/
+    # handle_path /changedetection/* {
+    #     reverse_proxy 127.0.0.1:8087
+    # }
+
+    redir /fmhy /fmhy/
+    handle_path /fmhy/* {
+        reverse_proxy 127.0.0.1:4173
+    }
+
+    # redir /files /files/
+    # handle_path /files/* {
+    #     reverse_proxy 127.0.0.1:8089
+    # }
+
+    # redir /linkwarden /linkwarden/
+    # handle_path /linkwarden/* {
+    #     reverse_proxy 127.0.0.1:3008
+    # }
+
+    # redir /paperless /paperless/
+    # handle_path /paperless/* {
+    #     reverse_proxy 127.0.0.1:8084
+    # }
+
+    redir /it-tools /it-tools/
+    handle_path /it-tools/* {
+        reverse_proxy 127.0.0.1:8085
+    }
+
+    redir /memos /memos/
+    handle_path /memos/* {
+        reverse_proxy 127.0.0.1:5230
+    }
+
+    handle /beszel* {
+        uri strip_prefix /beszel
+        reverse_proxy 127.0.0.1:8090 {
+            transport http {
+                read_timeout 360s
+            }
+        }
+    }
+
+    handle {
+        redir * /homepage/
+    }
+}

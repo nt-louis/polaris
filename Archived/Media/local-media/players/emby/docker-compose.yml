@@ -1,0 +1,14 @@
+services:
+  emby:
+    image: lscr.io/linuxserver/emby:latest
+    container_name: emby
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${GUID:-1000}
+      - TZ=${TZ}
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config:/config
+      - ${MEDIA_SHARE}:/data/media:ro,rslave
+    restart: unless-stopped

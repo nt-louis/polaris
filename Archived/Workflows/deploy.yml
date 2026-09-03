@@ -1,0 +1,248 @@
+name: GitOps Container Deployment
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/docker-compose.yml"
+      - "orchestrator/**"
+      - "manage.py"
+      - ".env.example"
+
+  workflow_dispatch:
+    inputs:
+      vps:
+        description: "Which VPS to deploy to"
+        required: true
+        default: "both"
+        type: choice
+        options: [both, A, B]
+      mode:
+        description: "Deploy mode: 'changed' (only modified services) or 'all'"
+        required: true
+        default: "changed"
+        type: choice
+        options: [changed, all]
+      dry_run:
+        description: "Dry run: simulate deployment & test VPS runner stability (no containers restarted)"
+        required: false
+        default: false
+        type: boolean
+
+
+jobs:
+  deploy-vps-b:
+    name: Deploy VPS B
+    runs-on: [self-hosted, vps-b]
+    environment: vps-b
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && (inputs.vps == 'both' || inputs.vps == 'B'))
+
+    steps:
+      - name: Targeted Deploy on Production Directory (VPS B)
+        env:
+          INPUT_MODE: ${{ inputs.mode }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.event.after }}
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          set -e
+          PROD_DIR="${{ vars.PROD_DIR }}"
+
+          if [ -z "$PROD_DIR" ]; then
+            echo "[ERROR] Required GitHub Environment variable PROD_DIR is not set for vps-b. Aborting deployment!"
+            exit 1
+          fi
+
+          echo "--- Switching to production directory: $PROD_DIR ---"
+          
+          if [ ! -d "$PROD_DIR" ]; then
+            echo "[ERROR] Production directory '$PROD_DIR' does not exist on host '$(hostname)'. Aborting deployment!"
+            exit 1
+          fi
+
+          cd "$PROD_DIR"
+
+          if [ ! -f "$PROD_DIR/manage.py" ]; then
+            echo "[ERROR] Deployment CLI '$PROD_DIR/manage.py' is missing in '$PROD_DIR'. Aborting deployment!"
+            exit 1
+          fi
+          
+          if [ -n "$(git status --porcelain -uno)" ]; then
+            echo "[WARNING] Uncommitted tracked changes detected on host $(hostname). Stashing changes before code sync..."
+            git stash push -m "vps-b-autostash-$(date +%s)"
+            trap 'echo "--- Restoring local working state (git stash pop) ---"; git stash pop || echo "[WARNING] Conflict while popping autostash. Uncommitted work is preserved in git stash list."' EXIT
+          fi
+
+          echo "--- Syncing production repository to target commit (${{ github.sha }}) ---"
+          git fetch https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ${{ github.sha }}
+          git reset --hard FETCH_HEAD
+
+          MODE="${INPUT_MODE:-changed}"
+          
+          if [ "$EVENT_NAME" = "push" ] || [ "$MODE" = "changed" ]; then
+            if [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+              CHANGED_FILES=$(git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" 2>/dev/null || git diff --name-only HEAD~1 HEAD)
+            else
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            fi
+            
+            echo "Changed files in push/commit range:"
+            echo "$CHANGED_FILES"
+            
+            SCRIPT_CHANGED=false
+            if echo "$CHANGED_FILES" | grep -q -E "^orchestrator/|^manage\.py|^\.env\.example"; then
+              SCRIPT_CHANGED=true
+            fi
+            
+            COMPOSE_DIRS=$(echo "$CHANGED_FILES" | grep -E "(docker-compose|compose)\.ya?ml$" | xargs -I {} dirname {} | sort -u)
+
+            if [ -n "$COMPOSE_DIRS" ]; then
+              DIRS_SPACE=$(echo "$COMPOSE_DIRS" | tr '\n' ' ')
+              VPS_DIRS=$(python3 -c "import sys; from orchestrator.registry.manifest import load_services; from orchestrator.registry.resolver import resolve_targets; services = load_services(); matched, _ = resolve_targets(services, sys.argv[1].split(), vps='B', strict_vps=False); print(' '.join(s.rel_dir for s in matched))" "$DIRS_SPACE" 2>/dev/null || echo "")
+
+              if [ -n "$VPS_DIRS" ]; then
+                DEPLOY_FLAGS="--services $VPS_DIRS"
+                echo "[TARGETED] Targeted deployment for VPS B services: $VPS_DIRS"
+              else
+                echo "[INFO] None of the modified compose services ($DIRS_SPACE) are assigned to VPS B. Skipping container restarts for VPS B."
+                exit 0
+              fi
+            else
+              if [ "$SCRIPT_CHANGED" = "true" ]; then
+                echo "[INFO] Only deployment scripts/docs updated. Repository code synced to commit. Skipping container restarts for VPS B."
+              else
+                echo "[INFO] No container compose files were modified in this commit. Skipping deployment for VPS B."
+              fi
+              exit 0
+            fi
+          else
+            echo "Manual deployment requested with mode='all'. Running full deployment."
+            DEPLOY_FLAGS="--last"
+          fi
+          
+          DRY_RUN_FLAG=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+            echo "[DRY-RUN] Simulation mode enabled. Zero containers will be restarted."
+          fi
+          
+          python3 -m pip install --break-system-packages --quiet -r requirements.txt 2>/dev/null || true
+
+          echo "--- Executing VPS B Deployment: $DEPLOY_FLAGS $DRY_RUN_FLAG ---"
+          python3 manage.py deploy $DEPLOY_FLAGS $DRY_RUN_FLAG --vps B
+          echo "--- VPS B deployment complete ---"
+
+
+  deploy-vps-a:
+    name: Deploy VPS A
+    runs-on: [self-hosted, vps-a]
+    environment: vps-a
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && (inputs.vps == 'both' || inputs.vps == 'A'))
+
+    steps:
+      - name: Targeted Deploy on Production Directory (VPS A)
+        env:
+          INPUT_MODE: ${{ inputs.mode }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.event.after }}
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          set -e
+          PROD_DIR="${{ vars.PROD_DIR }}"
+
+          if [ -z "$PROD_DIR" ]; then
+            echo "[ERROR] Required GitHub Environment variable PROD_DIR is not set for vps-a. Aborting deployment!"
+            exit 1
+          fi
+
+          echo "--- Switching to production directory: $PROD_DIR ---"
+          
+          if [ ! -d "$PROD_DIR" ]; then
+            echo "[ERROR] Production directory '$PROD_DIR' does not exist on host '$(hostname)'. Aborting deployment!"
+            exit 1
+          fi
+
+          cd "$PROD_DIR"
+
+          if [ ! -f "$PROD_DIR/manage.py" ]; then
+            echo "[ERROR] Deployment CLI '$PROD_DIR/manage.py' is missing in '$PROD_DIR'. Aborting deployment!"
+            exit 1
+          fi
+          
+          if [ -n "$(git status --porcelain -uno)" ]; then
+            echo "[WARNING] Uncommitted tracked changes detected on host $(hostname). Stashing changes before code sync..."
+            git stash push -m "vps-a-autostash-$(date +%s)"
+            trap 'echo "--- Restoring local working state (git stash pop) ---"; git stash pop || echo "[WARNING] Conflict while popping autostash. Uncommitted work is preserved in git stash list."' EXIT
+          fi
+
+          echo "--- Syncing production repository to target commit (${{ github.sha }}) ---"
+          git fetch https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ${{ github.sha }}
+          git reset --hard FETCH_HEAD
+
+          MODE="${INPUT_MODE:-changed}"
+          
+          if [ "$EVENT_NAME" = "push" ] || [ "$MODE" = "changed" ]; then
+            if [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+              CHANGED_FILES=$(git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" 2>/dev/null || git diff --name-only HEAD~1 HEAD)
+            else
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            fi
+            
+            echo "Changed files in push/commit range:"
+            echo "$CHANGED_FILES"
+            
+            SCRIPT_CHANGED=false
+            if echo "$CHANGED_FILES" | grep -q -E "^orchestrator/|^manage\.py|^\.env\.example"; then
+              SCRIPT_CHANGED=true
+            fi
+            
+            COMPOSE_DIRS=$(echo "$CHANGED_FILES" | grep -E "(docker-compose|compose)\.ya?ml$" | xargs -I {} dirname {} | sort -u)
+
+            if [ -n "$COMPOSE_DIRS" ]; then
+              DIRS_SPACE=$(echo "$COMPOSE_DIRS" | tr '\n' ' ')
+              VPS_DIRS=$(python3 -c "import sys; from orchestrator.registry.manifest import load_services; from orchestrator.registry.resolver import resolve_targets; services = load_services(); matched, _ = resolve_targets(services, sys.argv[1].split(), vps='A', strict_vps=False); print(' '.join(s.rel_dir for s in matched))" "$DIRS_SPACE" 2>/dev/null || echo "")
+
+              if [ -n "$VPS_DIRS" ]; then
+                DEPLOY_FLAGS="--services $VPS_DIRS"
+                echo "[TARGETED] Targeted deployment for VPS A services: $VPS_DIRS"
+              else
+                echo "[INFO] None of the modified compose services ($DIRS_SPACE) are assigned to VPS A. Skipping container restarts for VPS A."
+                exit 0
+              fi
+            else
+              if [ "$SCRIPT_CHANGED" = "true" ]; then
+                echo "[INFO] Only deployment scripts/docs updated. Repository code synced to commit. Skipping container restarts for VPS A."
+              else
+                echo "[INFO] No container compose files were modified in this commit. Skipping deployment for VPS A."
+              fi
+              exit 0
+            fi
+          else
+            echo "Manual deployment requested with mode='all'. Running full deployment."
+            DEPLOY_FLAGS="--last"
+          fi
+          
+          DRY_RUN_FLAG=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+            echo "[DRY-RUN] Simulation mode enabled. Zero containers will be restarted."
+          fi
+          
+          python3 -m pip install --break-system-packages --quiet -r requirements.txt 2>/dev/null || true
+
+          echo "--- Executing VPS A Deployment: $DEPLOY_FLAGS $DRY_RUN_FLAG ---"
+          python3 manage.py deploy $DEPLOY_FLAGS $DRY_RUN_FLAG --vps A
+          echo "--- VPS A deployment complete ---"

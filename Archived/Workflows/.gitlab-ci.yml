@@ -1,0 +1,134 @@
+# Net-Stream GitLab CI/CD Pipeline
+# Mirrors GitHub Actions CI for redundancy and independent validation.
+
+stages:
+  - test
+  - security
+
+variables:
+  GIT_DEPTH: "0"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+
+validate-compose:
+  stage: test
+  image: python:3.14-slim
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git
+    - pip install --no-cache-dir pyyaml
+  script:
+    - |
+      python3 -c '
+      import os, sys, yaml, subprocess
+
+      errors = 0
+      tested = 0
+
+      for root, dirs, files in os.walk("."):
+          if any(x in root for x in ["Archived", ".git", "node_modules"]):
+              continue
+          for f in files:
+              if f == "docker-compose.yml":
+                  path = os.path.normpath(os.path.join(root, f))
+                  tested += 1
+                  try:
+                      with open(path, "r", encoding="utf-8") as s:
+                          doc = yaml.safe_load(s)
+                      if not doc or not isinstance(doc, dict):
+                          print(f"[ERROR] Invalid structure: {path}")
+                          errors += 1
+                      else:
+                          print(f"[OK] YAML Syntax OK: {path}")
+                  except Exception as e:
+                      print(f"[ERROR] Parse error in {path}: {e}")
+                      errors += 1
+
+      print(f"\n--- Validation Summary ---")
+      print(f"Validated: {tested} compose projects")
+      print(f"Errors: {errors}")
+
+      manifest_path = os.path.normpath("orchestrator/registry/services.yaml")
+      if os.path.exists(manifest_path):
+          print("\n--- Manifest Drift Check ---")
+          with open(manifest_path, "r", encoding="utf-8") as f:
+              manifest = yaml.safe_load(f)
+          registered = {os.path.normpath(svc["path"]) for svc in manifest.get("services", [])}
+          
+          files = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+          active_compose = [
+              f for f in files 
+              if os.path.basename(f) in ("docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml", "mongo.compose.yaml")
+              and not f.startswith("Archived/")
+          ]
+          on_disk = {os.path.dirname(os.path.normpath(f)) for f in active_compose}
+          
+          missing = on_disk - registered
+          extra = registered - on_disk
+          if missing:
+              print("[ERROR] Unregistered compose projects:")
+              for p in sorted(missing): print(f"  - {p}")
+              errors += 1
+          if extra:
+              print("[ERROR] Stale manifest paths:")
+              for p in sorted(extra): print(f"  - {p}")
+              errors += 1
+          if not missing and not extra:
+              print(f"[OK] Manifest synchronized with repository ({len(on_disk)} services)")
+
+      if errors > 0:
+          sys.exit(1)
+      '
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "**/docker-compose.yml"
+        - "Network/Caddyfile"
+        - "public-caddyfile-snippet.txt"
+        - "orchestrator/registry/services.yaml"
+        - ".gitlab-ci.yml"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH =~ /^epic/
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+python-tests:
+  stage: test
+  image: python:3.14-slim
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git
+    - pip install -r requirements-dev.txt
+  script:
+    - ruff check orchestrator/ manage.py --select E9,F,I
+    - python3 -m unittest discover -s orchestrator/tests -v
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "orchestrator/**/*"
+        - "manage.py"
+        - "requirements*.txt"
+        - ".gitlab-ci.yml"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH =~ /^epic/
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+gitleaks-scan:
+  stage: security
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  script:
+    - |
+      if [ -n "$CI_MERGE_REQUEST_DIFF_BASE_SHA" ]; then
+        gitleaks detect --log-opts="$CI_MERGE_REQUEST_DIFF_BASE_SHA..HEAD" --verbose --redact
+      elif [ -n "$CI_COMMIT_BEFORE_SHA" ] && [ "$CI_COMMIT_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+        gitleaks detect --log-opts="$CI_COMMIT_BEFORE_SHA..$CI_COMMIT_SHA" --verbose --redact
+      else
+        gitleaks detect --log-opts="HEAD~1..HEAD" --verbose --redact
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH =~ /^epic/
+    - if: $CI_PIPELINE_SOURCE == "web"

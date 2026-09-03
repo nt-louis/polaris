@@ -1,0 +1,83 @@
+services:
+  comet:
+    image: g0ldyy/comet:latest
+    container_name: comet
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:5435/${POSTGRES_DB}
+      - DATABASE_TYPE=postgresql
+      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL}
+      - FASTAPI_HOST=0.0.0.0
+      - FASTAPI_PORT=8800
+      - TZ=${TZ}
+      - FASTAPI_WORKERS=${FASTAPI_WORKERS:-2}
+      - USE_GUNICORN=${USE_GUNICORN:-True}
+      - GUNICORN_PRELOAD_APP=${GUNICORN_PRELOAD_APP:-True}
+      - EXECUTOR_MAX_WORKERS=${EXECUTOR_MAX_WORKERS:-2}
+      - HTTP_CLIENT_LIMIT=${HTTP_CLIENT_LIMIT:-100}
+      - HTTP_CLIENT_LIMIT_PER_HOST=${HTTP_CLIENT_LIMIT_PER_HOST:-20}
+      - HTTP_CLIENT_TIMEOUT_TOTAL=${HTTP_CLIENT_TIMEOUT_TOTAL:-30}
+      - INDEXER_MANAGER_TIMEOUT=${INDEXER_MANAGER_TIMEOUT:-12}
+      - INDEXER_MANAGER_WAIT_TIMEOUT=${INDEXER_MANAGER_WAIT_TIMEOUT:-15}
+      - SCRAPE_JACKETT=${SCRAPE_JACKETT:-both}
+      - JACKETT_URL=${JACKETT_URL:-http://media-gateway-stremio-utilities-gluetun:9117}
+      - JACKETT_API_KEY=${JACKETT_API_KEY}
+      - SCRAPE_TORRENTIO=${SCRAPE_TORRENTIO:-both}
+      - SCRAPE_ZILEAN=${SCRAPE_ZILEAN:-both}
+      - TORRENT_CACHE_TTL=${TORRENT_CACHE_TTL:--1}
+      - LIVE_TORRENT_CACHE_TTL=${LIVE_TORRENT_CACHE_TTL:-86400}
+      - DEBRID_CACHE_TTL=${DEBRID_CACHE_TTL:-86400}
+      - METADATA_CACHE_TTL=${METADATA_CACHE_TTL:-2592000}
+      - BACKGROUND_SCRAPER_ENABLED=${BACKGROUND_SCRAPER_ENABLED:-True}
+      - BACKGROUND_SCRAPER_CONCURRENT_WORKERS=${BACKGROUND_SCRAPER_CONCURRENT_WORKERS:-2}
+      - BACKGROUND_SCRAPER_INTERVAL=${BACKGROUND_SCRAPER_INTERVAL:-3600}
+      - BACKGROUND_SCRAPER_MAX_MOVIES_PER_RUN=${BACKGROUND_SCRAPER_MAX_MOVIES_PER_RUN:-150}
+      - BACKGROUND_SCRAPER_MAX_SERIES_PER_RUN=${BACKGROUND_SCRAPER_MAX_SERIES_PER_RUN:-150}
+      - BACKGROUND_SCRAPER_ENABLE_DEMAND_PRIORITY=${BACKGROUND_SCRAPER_ENABLE_DEMAND_PRIORITY:-True}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: comet-postgres
+    labels:
+      - "wud.tag.include=^18(\\.\\d+)*-alpine$"
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    command:
+      - "postgres"
+      - "-p"
+      - "5435"
+      - "-c"
+      - "shared_buffers=128MB"
+      - "-c"
+      - "effective_cache_size=384MB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=8MB"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=8MB"
+      - "-c"
+      - "max_connections=100"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p 5435 -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+

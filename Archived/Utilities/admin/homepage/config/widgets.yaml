@@ -1,0 +1,19 @@
+- datetime:
+    text_size: l
+    format:
+      date: dddd, MMMM Do
+      time: h:mm A
+      hour12: true
+
+- logo:
+    icon: self-hosted
+    text: Net-Stream Homelab
+
+- search:
+    provider: custom
+    url: https://search.example.com/search?q=
+    target: _blank
+
+- resources:
+    cpu: true
+    memory: true

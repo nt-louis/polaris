@@ -1,0 +1,50 @@
+name: Sync to GitLab
+
+on:
+  push:
+    branches:
+      - '**'
+  delete:
+  workflow_dispatch:
+
+concurrency:
+  group: gitlab-sync
+  cancel-in-progress: false
+
+jobs:
+  sync-to-gitlab:
+    name: Sync refs to GitLab
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Setup SSH Key
+        env:
+          GITLAB_SSH_KEY: ${{ secrets.GITLAB_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$GITLAB_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -t ed25519,ecdsa,rsa gitlab.com >> ~/.ssh/known_hosts
+
+      - name: Checkout Repository
+        if: github.event_name != 'delete'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Mirror branch to GitLab
+        if: github.event_name != 'delete'
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          echo "Mirroring branch '$BRANCH' to GitLab..."
+          git push git@gitlab.com:nt-louis/net-stream.git "HEAD:refs/heads/$BRANCH" --force
+
+      - name: Delete branch on GitLab mirror
+        if: github.event_name == 'delete' && github.event.ref_type == 'branch'
+        run: |
+          git init
+          DELETED_BRANCH="${{ github.event.ref }}"
+          echo "Branch $DELETED_BRANCH was deleted on GitHub. Deleting from GitLab..."
+          git push git@gitlab.com:nt-louis/net-stream.git --delete "$DELETED_BRANCH" || echo "Branch $DELETED_BRANCH not found on GitLab or already deleted."

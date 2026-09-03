@@ -1,0 +1,17 @@
+services:
+  autobrr:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7474/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    container_name: autobrr
+    image: ghcr.io/autobrr/autobrr:v1.85.0
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config:/config

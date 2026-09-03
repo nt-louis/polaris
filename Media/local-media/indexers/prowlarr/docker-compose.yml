@@ -1,0 +1,17 @@
+services:
+  prowlarr:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9696/initialize.js || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/linuxserver/prowlarr:2.6.3-nightly
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ}
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config:/config
+    restart: unless-stopped

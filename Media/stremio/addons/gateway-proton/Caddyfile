@@ -1,0 +1,20 @@
+{$TAILNET_FQDN} {
+    tls {
+        get_certificate tailscale
+    }
+
+    redir /aiometadata /aiometadata/
+    handle_path /aiometadata/* {
+        reverse_proxy 127.0.0.1:3232
+    }
+
+    redir /aiomanager /aiomanager/
+    handle_path /aiomanager/* {
+        reverse_proxy 127.0.0.1:1610
+    }
+
+    redir /streampicker /streampicker/
+    handle_path /streampicker/* {
+        reverse_proxy 127.0.0.1:8000
+    }
+}

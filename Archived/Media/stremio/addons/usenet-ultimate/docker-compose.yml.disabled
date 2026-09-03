@@ -1,0 +1,8 @@
+services:
+  usenet-ultimate:
+    image: ghcr.io/dsmart33/usenet-ultimate:v1.4.1
+    container_name: usenet-ultimate
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+    volumes:
+      - ./config:/app/config
+    restart: unless-stopped

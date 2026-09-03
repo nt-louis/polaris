@@ -1,0 +1,13 @@
+services:
+  aiostreams:
+    image: ghcr.io/viren070/aiostreams:latest
+    container_name: aiostreams
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+
+    env_file:
+      - .env
+    environment:
+      - PORT=3004
+    volumes:
+      - ./data:/app/data

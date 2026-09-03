@@ -1,0 +1,55 @@
+{$TAILNET_FQDN} {
+    tls {
+        get_certificate tailscale
+    }
+
+    redir /watchly /watchly/
+    handle_path /watchly/* {
+        reverse_proxy 127.0.0.1:8010
+    }
+
+
+    redir /stremthru /stremthru/
+    handle_path /stremthru/* {
+        reverse_proxy 127.0.0.1:8080
+    }
+
+    redir /aiostreams /aiostreams/
+    handle_path /aiostreams/* {
+        reverse_proxy 127.0.0.1:3004
+    }
+
+    redir /nzbdav /nzbdav/
+    handle_path /nzbdav/* {
+        reverse_proxy 127.0.0.1:3000
+    }
+
+#     redir /usenetstreamer /usenetstreamer/
+#     handle_path /usenetstreamer/* {
+#         reverse_proxy 127.0.0.1:7002
+#     }
+
+#     redir /usenet-ultimate /usenet-ultimate/
+#     handle_path /usenet-ultimate/* {
+#        reverse_proxy 127.0.0.1:1337
+#     }
+
+
+    redir /jackettio /jackettio/
+    handle_path /jackettio/* {
+        reverse_proxy 127.0.0.1:4000
+    }
+
+
+    redir /nzbhydra2 /nzbhydra2/
+    handle_path /nzbhydra2/* {
+        reverse_proxy 127.0.0.1:5076
+    }
+
+    redir /streamnzb /streamnzb/
+    handle_path /streamnzb/* {
+        reverse_proxy 127.0.0.1:7000
+    }
+
+    respond "Stremio addons gateway is running." 200
+}

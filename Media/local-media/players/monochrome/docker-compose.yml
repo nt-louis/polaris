@@ -1,0 +1,6 @@
+services:
+  monochrome:
+    image: local/monochrome:latest
+    container_name: monochrome
+    network_mode: "container:media-gateway-core-gluetun"
+    restart: unless-stopped

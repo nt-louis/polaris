@@ -1,0 +1,20 @@
+services:
+  hawser:
+    image: ghcr.io/finsys/hawser:0.2.46
+    container_name: hawser
+    restart: unless-stopped
+    network_mode: host  # Run directly on host network to be reachable via Tailnet
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://$${BIND_ADDRESS:-${VPS_B_TAILSCALE_IP}}:$${PORT:-2376}/_hawser/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Read-only!
+    environment:
+      - TOKEN=${HAWSER_TOKEN}
+      - AGENT_NAME=vps-b
+      - BIND_ADDRESS=${HAWSER_BIND_ADDRESS:-${VPS_B_TAILSCALE_IP}}

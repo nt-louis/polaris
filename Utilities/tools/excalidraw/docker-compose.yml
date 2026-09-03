@@ -1,0 +1,12 @@
+services:
+  excalidraw:
+    image: excalidraw/excalidraw:latest
+    container_name: excalidraw
+    restart: unless-stopped
+    networks:
+      - vps_b_net
+
+networks:
+  vps_b_net:
+    name: vps_b_net
+    external: true

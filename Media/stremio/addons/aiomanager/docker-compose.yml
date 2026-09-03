@@ -1,0 +1,43 @@
+services:
+  aiomanager:
+    image: ghcr.io/sonicx161/aiomanager:beta
+    container_name: aiomanager
+    restart: unless-stopped
+    network_mode: "container:media-gateway-proton-gluetun"
+    volumes:
+      - ./aio-data:/app/data
+    healthcheck:
+      # NOTE: If you use Traefik/Reverse Proxies and see 404s, remove the healthcheck block.
+      test: [ "CMD", "/nodejs/bin/node", "server/healthcheck.js" ]
+      interval: 1m
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      aiomanager-db:
+        condition: service_healthy
+
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:?POSTGRES_USER must be set}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@127.0.0.1:5432/${POSTGRES_DB:?POSTGRES_DB must be set}?sslmode=disable
+
+  # --- Internal PostgreSQL Service ---
+  aiomanager-db:
+    image: postgres:16-alpine
+    container_name: aiomanager_db
+    labels:
+      - "wud.tag.include=^16(\\.\\d+)*-alpine$"
+    restart: unless-stopped
+    network_mode: "container:media-gateway-proton-gluetun"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?POSTGRES_USER must be set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      - POSTGRES_DB=${POSTGRES_DB:?POSTGRES_DB must be set}
+    volumes:
+      - ./aio-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5

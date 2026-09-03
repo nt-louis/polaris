@@ -1,0 +1,16 @@
+services:
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    restart: unless-stopped
+    network_mode: "container:media-gateway-core-gluetun"
+    environment:
+      - PLEX_UID=${PUID:-1000}
+      - PLEX_GID=${PGID:-1000}
+      - TZ=${TZ}
+      - PLEX_CLAIM=${PLEX_CLAIM}
+    volumes:
+      - /dev/shm:/dev/shm
+      - ./config:/config
+      - ./transcode:/transcode
+      - ${MEDIA_SHARE}:/share

@@ -1,0 +1,68 @@
+services:
+  tracearr:
+    image: ghcr.io/connorgallopo/tracearr:2.2.3
+    container_name: tracearr
+    environment:
+      - NODE_ENV=production
+      - PORT=3015
+      - HOST=0.0.0.0
+      - TZ=${TZ:-America/New_York}
+      - DATABASE_URL=postgres://tracearr:${DB_PASSWORD:?DB_PASSWORD must be set}@127.0.0.1:5433/tracearr
+      - REDIS_URL=redis://127.0.0.1:6380
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - COOKIE_SECRET=${COOKIE_SECRET:?COOKIE_SECRET must be set}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      timescale:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./data/backups:/data/backup
+    network_mode: "container:media-gateway-core-gluetun"
+    restart: unless-stopped
+
+  timescale:
+    image: timescale/timescaledb-ha:pg18.1-ts2.25.1-oss
+    container_name: tracearr-db
+    labels:
+      - "wud.watch=false"
+    shm_size: 512mb
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    command: postgres -p 5433 -c timescaledb.license=timescale -c timescaledb.max_tuples_decompressed_per_dml_transaction=0 -c max_locks_per_transaction=4096 -c timescaledb.telemetry_level=off
+    environment:
+      - POSTGRES_USER=tracearr
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set}
+      - POSTGRES_DB=tracearr
+    volumes:
+      - ./data/postgres:/home/postgres/pgdata/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p 5433 -U tracearr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    network_mode: "container:media-gateway-core-gluetun"
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    container_name: tracearr-redis
+    labels:
+      - "wud.tag.include=^8(\\.\\d+)*-alpine$"
+    command: redis-server --port 6380 --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    network_mode: "container:media-gateway-core-gluetun"
+    restart: unless-stopped
+
+volumes:
+  redis_data:

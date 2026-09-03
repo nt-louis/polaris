@@ -1,0 +1,19 @@
+services:
+  jellyfin:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8096/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/hotio/jellyfin:release-10.11.11
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ}
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config:/config
+      - ${MEDIA_SHARE}:/data/media:ro,rslave
+    restart: unless-stopped

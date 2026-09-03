@@ -1,0 +1,38 @@
+services:
+  wud:
+    image: getwud/wud:latest
+    container_name: wud
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./store:/store
+    environment:
+      # Watch all containers by default. Set to false to only monitor containers with the label `wud.watch=true`
+      - WUD_WATCHER_LOCAL_WATCHBYDEFAULT=true
+      - WUD_WATCHER_VPSB_TYPE=docker
+      - WUD_WATCHER_VPSB_HOST=tcp://stremio-util:2375
+      - WUD_WATCHER_VPSB_WATCHBYDEFAULT=true
+      - WUD_WATCH_SCHEDULE=0 0 1 * * * # Scan daily at 1 AM
+      - TZ=${TZ:-America/New_York}
+      # Triggers (Mapped to .env)
+      - WUD_TRIGGER_DISCORD_MYDISCORD_URL=${WUD_DISCORD_WEBHOOK}
+      - WUD_TRIGGER_TELEGRAM_MYTELEGRAM_BOTTOKEN=${WUD_TELEGRAM_TOKEN}
+      - WUD_TRIGGER_TELEGRAM_MYTELEGRAM_CHATID=${WUD_TELEGRAM_CHATID}
+      # WUD UI manual update trigger (Enables the "RUN" button in the Web UI)
+      - WUD_TRIGGER_DOCKER_LOCALDOCKER_PRUNE=true
+      # WUD UI OIDC PocketID SSO
+      - WUD_AUTH_OIDC_POCKETID_CLIENTID=${WUD_OIDC_CLIENT_ID:-wud}
+      - WUD_AUTH_OIDC_POCKETID_CLIENTSECRET=${WUD_OIDC_CLIENT_SECRET}
+      - WUD_AUTH_OIDC_POCKETID_DISCOVERY=${WUD_OIDC_DISCOVERY}
+      - WUD_AUTH_OIDC_POCKETID_REDIRECT=true
+      # Discord Batching
+      - WUD_TRIGGER_DISCORD_MYDISCORD_MODE=batch
+      - WUD_TRIGGER_DISCORD_MYDISCORD_BATCHTITLE=$$count Docker Update(s) Available
+      # Telegram Batching
+      - WUD_TRIGGER_TELEGRAM_MYTELEGRAM_MODE=batch
+      - WUD_TRIGGER_TELEGRAM_MYTELEGRAM_BATCHTITLE=$$count Docker Update(s) Available
+      # Notification batches
+      - WUD_TRIGGER_DISCORD_MYDISCORD_THRESHOLD=minor
+      - WUD_TRIGGER_TELEGRAM_MYTELEGRAM_THRESHOLD=minor
+    ports:
+      - "127.0.0.1:3009:3000"
+    restart: unless-stopped

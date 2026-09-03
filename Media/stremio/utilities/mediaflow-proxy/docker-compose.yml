@@ -1,0 +1,34 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: mfp-redis
+    labels:
+      - "wud.tag.include=^7(\\.\\d+)*-alpine$"
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    volumes:
+      - ./data/redis:/data
+    # Optional: expose Redis port for debugging (remove in production)
+    # ports:
+    #   - '6379:6379'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mfp:
+    image: mhdzumair/mediaflow-proxy:latest
+    # build: https://github.com/mhdzumair/mediaflow-proxy@sha256:48baa7a425f5cb85733677505f417b2330784c12359de0f5c991b433bc280b87.git#main
+    container_name: mfp
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    environment:
+      API_PASSWORD: ${API_PASSWORD}
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS}
+      REDIS_URL: ${REDIS_URL:-redis://127.0.0.1:6379}
+    depends_on:
+      redis:
+        condition: service_healthy
+
+

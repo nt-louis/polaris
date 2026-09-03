@@ -1,0 +1,13 @@
+services:
+    kavita:
+        image: jvmilazz0/kavita:latest    # Using the stable branch from the official dockerhub repo.
+        container_name: kavita
+        network_mode: "container:media-gateway-comics-gluetun"
+        volumes: 
+            - ${MEDIA_SHARE}/media/Books:/books
+            - ./config:/kavita/config     # /kavita/config must not be changed
+        environment:
+            - PUID=${PUID:-1000}
+            - PGID=${GUID:-1000}
+            - TZ=${TZ}
+        restart: unless-stopped

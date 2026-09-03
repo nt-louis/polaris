@@ -1,0 +1,14 @@
+services:
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:sts
+    restart: always
+    network_mode: "container:utilities-gateway-gluetun"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/data
+    command: --tunnel-port 3001
+
+networks:
+  default:
+    name: portainer_network

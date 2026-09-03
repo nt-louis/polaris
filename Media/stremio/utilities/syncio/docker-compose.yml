@@ -1,0 +1,18 @@
+services:
+  syncio:
+    container_name: syncio
+    image: ghcr.io/iamneur0/syncio:private
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      - INSTANCE=private
+      - JWT_SECRET=${SYNCIO_JWT_SECRET}
+      - ENCRYPTION_KEY=${SYNCIO_ENCRYPTION_KEY}
+      - SYNCIO_PRIVATE_USERNAME=${SYNCIO_PRIVATE_USERNAME}
+      - SYNCIO_PRIVATE_PASSWORD=${SYNCIO_PRIVATE_PASSWORD}
+      - FRONTEND_PORT=3000
+      - BACKEND_PORT=4000
+      - TZ=${TZ}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

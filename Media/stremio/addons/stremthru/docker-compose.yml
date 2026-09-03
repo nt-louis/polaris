@@ -1,0 +1,15 @@
+services:
+  stremthru:
+    container_name: stremthru
+    image: muniftanjim/stremthru:latest
+    network_mode: "container:media-gateway-stremio-addons-gluetun"
+
+    environment:
+      - STREMTHRU_AUTH=${STREMTHRU_AUTH}
+      - STREMTHRU_BASE_URL=${STREMTHRU_BASE_URL}
+      - STREMTHRU_STORE_AUTH=${STREMTHRU_STORE_AUTH}
+      - STREMTHRU_VAULT_SECRET=${STREMTHRU_VAULT_SECRET}
+      - STREMTHRU_NEWZ_MAX_CONNECTION_PER_STREAM=${STREMTHRU_NEWZ_MAX_CONNECTION_PER_STREAM}
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data

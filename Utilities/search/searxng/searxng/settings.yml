@@ -1,0 +1,5 @@
+use_default_settings: true
+server:
+  port: 8082
+  bind_address: "127.0.0.1"
+  secret_key: "searxngsecretkeyfortailnetsecurity"

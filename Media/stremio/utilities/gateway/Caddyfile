@@ -1,0 +1,32 @@
+{$TAILNET_FQDN} {
+    tls {
+        get_certificate tailscale
+    }
+
+    redir /jackett /jackett/
+    handle_path /jackett/* {
+        reverse_proxy 127.0.0.1:9117
+    }
+
+    redir /mediaflow /mediaflow/
+    handle_path /mediaflow/* {
+        reverse_proxy 127.0.0.1:8888
+    }
+
+    redir /dmm /dmm/
+    handle_path /dmm/* {
+        reverse_proxy 127.0.0.1:3001
+    }
+
+    redir /syncio /syncio/
+    handle_path /syncio/* {
+        reverse_proxy 127.0.0.1:3000
+    }
+
+    redir /scrob /scrob/
+    handle_path /scrob/* {
+        reverse_proxy 127.0.0.1:7330
+    }
+
+    respond "Stremio utilities gateway is running." 200
+}

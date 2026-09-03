@@ -1,0 +1,157 @@
+services:
+  mediafusion-db:
+    image: postgres:18-alpine
+    container_name: mediafusion-db
+    restart: unless-stopped
+    shm_size: 512mb
+    network_mode: "container:media-gateway-proton-gluetun"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mediafusion}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-mediafusion}
+      - POSTGRES_INITDB_ARGS=--data-checksums
+    command:
+      - "postgres"
+      - "-p"
+      - "5436"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=768MB"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "huge_pages=off"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
+      - "-c"
+      - "max_worker_processes=4"
+      - "-c"
+      - "max_parallel_workers_per_gather=2"
+      - "-c"
+      - "max_parallel_workers=4"
+      - "-c"
+      - "max_parallel_maintenance_workers=2"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p 5436 -U $${POSTGRES_USER:-mediafusion} -d $${POSTGRES_DB:-mediafusion}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mediafusion-redis:
+    image: redis:alpine
+    container_name: mediafusion-redis
+    restart: unless-stopped
+    network_mode: "container:media-gateway-proton-gluetun"
+    command: redis-server --port 6381 --appendonly yes --save 60 1 --maxmemory-policy allkeys-lru
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6381", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mediafusion-web:
+    image: mhdzumair/mediafusion:6.0.1
+    container_name: mediafusion-web
+    restart: unless-stopped
+    network_mode: "container:media-gateway-proton-gluetun"
+    depends_on:
+      mediafusion-db:
+        condition: service_healthy
+      mediafusion-redis:
+        condition: service_healthy
+    environment:
+      - SECRET_KEY=${MEDIAFUSION_SECRET_KEY}
+      - API_PASSWORD=${MEDIAFUSION_API_PASSWORD}
+      - POSTGRES_URI=postgresql://${POSTGRES_USER:-mediafusion}:${POSTGRES_PASSWORD}@127.0.0.1:5436/${POSTGRES_DB:-mediafusion}
+      - REDIS_URL=redis://127.0.0.1:6381/0
+      - HOST_URL=${MEDIAFUSION_HOST_URL}
+      - STREAM_RS_PORT=8006
+      - RUST_BACKTRACE=1
+      - PROWLARR_URL=${PROWLARR_URL}
+      - PROWLARR_API_KEY=${PROWLARR_API_KEY}
+      - PROWLARR_LIVE_TITLE_SEARCH=${PROWLARR_LIVE_TITLE_SEARCH}
+      - IS_SCRAP_FROM_PROWLARR=${IS_SCRAP_FROM_PROWLARR}
+      - JACKETT_URL=${JACKETT_URL}
+      - JACKETT_API_KEY=${JACKETT_API_KEY}
+      - JACKETT_LIVE_TITLE_SEARCH=${JACKETT_LIVE_TITLE_SEARCH}
+      - IS_SCRAP_FROM_JACKETT=${IS_SCRAP_FROM_JACKETT}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8006/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mediafusion-worker:
+    image: mhdzumair/mediafusion:6.0.1
+    container_name: mediafusion-worker
+    restart: unless-stopped
+    network_mode: "container:media-gateway-proton-gluetun"
+    depends_on:
+      mediafusion-db:
+        condition: service_healthy
+      mediafusion-redis:
+        condition: service_healthy
+      mediafusion-web:
+        condition: service_healthy
+      mediafusion-browserless:
+        condition: service_started
+      mediafusion-byparr:
+        condition: service_started
+    command: ["/usr/local/bin/mediafusion-worker"]
+    environment:
+      - SECRET_KEY=${MEDIAFUSION_SECRET_KEY}
+      - API_PASSWORD=${MEDIAFUSION_API_PASSWORD}
+      - POSTGRES_URI=postgresql://${POSTGRES_USER:-mediafusion}:${POSTGRES_PASSWORD}@127.0.0.1:5436/${POSTGRES_DB:-mediafusion}
+      - REDIS_URL=redis://127.0.0.1:6381/0
+      - HOST_URL=${MEDIAFUSION_HOST_URL}
+      - BROWSERLESS_URL=http://127.0.0.1:3002
+      - BYPARR_URL=http://127.0.0.1:8191
+      - PROWLARR_URL=${PROWLARR_URL}
+      - PROWLARR_API_KEY=${PROWLARR_API_KEY}
+      - PROWLARR_LIVE_TITLE_SEARCH=${PROWLARR_LIVE_TITLE_SEARCH}
+      - IS_SCRAP_FROM_PROWLARR=${IS_SCRAP_FROM_PROWLARR}
+      - JACKETT_URL=${JACKETT_URL}
+      - JACKETT_API_KEY=${JACKETT_API_KEY}
+      - JACKETT_LIVE_TITLE_SEARCH=${JACKETT_LIVE_TITLE_SEARCH}
+      - IS_SCRAP_FROM_JACKETT=${IS_SCRAP_FROM_JACKETT}
+
+  mediafusion-browserless:
+    image: ghcr.io/browserless/chromium:latest
+    container_name: mediafusion-browserless
+    restart: unless-stopped
+    network_mode: "container:media-gateway-proton-gluetun"
+    environment:
+      - PORT=3002
+      - CONCURRENT=4
+      - TIMEOUT=120000
+      - ENABLE_CORS=true
+
+  mediafusion-byparr:
+    image: ghcr.io/thephaseless/byparr:latest
+    container_name: mediafusion-byparr
+    restart: unless-stopped
+    network_mode: "container:media-gateway-proton-gluetun"
+    environment:
+      - PORT=8191
+      - LOG_LEVEL=info

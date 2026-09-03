@@ -1,0 +1,14 @@
+services:
+  readarr-books:
+    image: ghcr.io/pennydreadful/bookshelf:hardcover
+    container_name: readarr-books
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${GUID:-1000}
+      - TZ=${TZ}
+      - READARR__SERVER__PORT=8787
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config:/config
+      - ${MEDIA_SHARE}:/share
+    restart: unless-stopped

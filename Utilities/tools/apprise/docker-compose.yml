@@ -1,0 +1,12 @@
+services:
+  apprise:
+    image: ghcr.io/linuxserver/apprise-api:1.5.3
+    container_name: apprise
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ./config:/config
+    restart: unless-stopped

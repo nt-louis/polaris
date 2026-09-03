@@ -1,0 +1,16 @@
+services:
+  arr-dashboard:
+    image: khak1s/arr-dashboard:latest
+    container_name: arr-dashboard
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${GUID:-1000}
+      - TZ=${TZ}
+      - PORT=3020
+      - API_CORS_ORIGIN=${API_CORS_ORIGIN:-*}
+      - WEBAUTHN_ORIGIN=${WEBAUTHN_ORIGIN}
+      - WEBAUTHN_RP_ID=${WEBAUTHN_RP_ID}
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config:/config
+    restart: unless-stopped

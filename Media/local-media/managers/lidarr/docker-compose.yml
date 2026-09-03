@@ -1,0 +1,18 @@
+services:
+  lidarr:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8686/initialize.js || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/linuxserver/lidarr:3.1.5-nightly
+    container_name: lidarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ}
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config:/config
+      - ${MEDIA_SHARE}:/share
+    restart: unless-stopped

@@ -1,0 +1,21 @@
+services:
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - SERVER_PORT=8083
+      - TZ=${TZ:-America/New_York}
+      - SYSTEM_BACKENDURL=${BACKEND_URL}
+      - SECURITY_ENABLE_LOGIN=true
+      - SECURITY_ENABLELOGIN=true
+      - DISABLE_ADDITIONAL_FEATURES=false
+      - DOCKER_ENABLE_SECURITY=true
+      - SECURITY_LOGINMETHOD=all
+    volumes:
+      - ./trainingData:/usr/share/tessdata
+      - ./extraConfigs:/configs
+      - ./logs:/logs
+    healthcheck:
+      disable: true
+    restart: unless-stopped

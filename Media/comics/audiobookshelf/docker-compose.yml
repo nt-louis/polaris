@@ -1,0 +1,20 @@
+services:
+  audiobookshelf:
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:13378/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/advplyr/audiobookshelf:2.36.0
+    container_name: audiobookshelf
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ}
+      - PORT=13378
+    network_mode: "container:media-gateway-comics-gluetun"
+    volumes:
+      - ./config:/config
+      - ./metadata:/metadata
+      - ${MEDIA_SHARE}/media/Books:/books
+    restart: unless-stopped

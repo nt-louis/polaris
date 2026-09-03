@@ -1,0 +1,31 @@
+services:
+  open-webui:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/open-webui/open-webui:v0.11.3
+    container_name: open-webui
+    restart: unless-stopped
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    volumes:
+      - ./data:/app/backend/data
+    environment:
+      - TZ=${TZ:-America/New_York}
+      - WEBUI_URL=${WEBUI_URL}
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY:?WEBUI_SECRET_KEY must be set}
+      - WEBUI_NAME=${WEBUI_NAME:-Net-Stream AI}
+      - ENABLE_OLLAMA=${ENABLE_OLLAMA:-true}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://127.0.0.1:11434}
+      - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN}
+      # OIDC Configuration
+      - OAUTH_SCOPES=openid email profile
+      - ENABLE_OAUTH_SIGNUP=true
+      - OAUTH_PROVIDER_NAME=${OAUTH_PROVIDER_NAME}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - OPENID_PROVIDER_URL=${OPENID_PROVIDER_URL}
+      - OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true
+      - ENABLE_LOGIN_FORM=true
+      - OAUTH_SESSION_TOKEN_ENCRYPTION_KEY=${OAUTH_SESSION_TOKEN_ENCRYPTION_KEY}

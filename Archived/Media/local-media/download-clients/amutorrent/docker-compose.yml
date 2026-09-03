@@ -1,0 +1,68 @@
+services:
+  amule:
+    image: ngosang/amule:latest
+    container_name: amule
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ}
+      - GUI_PWD=${AMULE_PASSWORD:-admin}
+      - WEBUI_PWD=${AMULE_PASSWORD:-admin}
+      - INCOMING_DIR=/share/downloads/amule/incoming
+      - TEMP_DIR=/share/downloads/amule/temp
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config:/home/amule/.aMule
+      - ${MEDIA_SHARE}/downloads/amule:/share/downloads/amule
+    stop_grace_period: 30s
+    restart: unless-stopped
+
+  amutorrent:
+    image: g0t3nks/amutorrent:latest
+    container_name: amutorrent
+    user: "${PUID:-1000}:${PGID:-1000}"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT:-4000}
+      - TZ=${TZ}
+      # Integrations (Using 127.0.0.1 since they share the same network namespace)
+      - AMULE_ENABLED=true
+      - AMULE_HOST=127.0.0.1
+      - AMULE_PORT=4712
+      - AMULE_PASSWORD=${AMULE_PASSWORD:-admin}
+      - QBITTORRENT_ENABLED=true
+      - QBITTORRENT_HOST=127.0.0.1
+      - QBITTORRENT_PORT=8080
+      - PROWLARR_ENABLED=true
+      - PROWLARR_URL=http://127.0.0.1:9696
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./logs:/usr/src/app/server/logs
+      - ./data:/usr/src/app/server/data
+      - ${MEDIA_SHARE}:/share
+    depends_on:
+      - amule
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:' + (process.env.PORT || 4000) + '/health', r => r.statusCode === 200 ? process.exit(0) : process.exit(1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  geoip:
+    image: crazymax/geoip-updater:latest
+    container_name: geoip-updater
+    network_mode: "container:media-gateway-core-gluetun"
+    environment:
+      - EDITION_IDS=GeoLite2-ASN,GeoLite2-City,GeoLite2-Country
+      - LICENSE_KEY=${GEOIP_LICENSE_KEY:-YOUR_LICENSE_KEY}
+      - DOWNLOAD_PATH=/data
+      - SCHEDULE=0 0 * * 0
+      - LOG_LEVEL=info
+      - LOG_JSON=false
+    volumes:
+      - ./data/geoip:/data
+    restart: unless-stopped

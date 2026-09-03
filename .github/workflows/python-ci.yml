@@ -1,0 +1,68 @@
+name: Python Code Quality
+
+on:
+  push:
+    branches: [main, epic/modular-orchestrator, "epic/**"]
+    paths:
+      - "orchestrator/**"
+      - "manage.py"
+      - "requirements*.txt"
+      - ".github/workflows/python-ci.yml"
+  pull_request:
+    branches: [main, epic/modular-orchestrator, "epic/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-tests:
+    name: Python Lint & Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Determine Python validation scope
+        id: scope
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+            orchestrator manage.py ':(glob)requirements*.txt' \
+            .github/workflows/python-ci.yml; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Python 3.11
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        run: python -m pip install --requirement requirements-dev.txt
+
+      - name: Ruff lint (syntax, imports & undefined names)
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        run: ruff check orchestrator/ manage.py --select E9,F,I
+
+      - name: Pytest
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        run: |
+          pytest orchestrator/ -v
+
+      - name: Record skipped heavy validation
+        if: github.event_name == 'pull_request' && steps.scope.outputs.run != 'true'
+        run: echo "Python files and dependencies are unchanged; lint and tests were not required." >> "$GITHUB_STEP_SUMMARY"

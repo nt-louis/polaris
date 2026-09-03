@@ -1,0 +1,22 @@
+# Zurg configuration v1 (Real-Debrid)
+zurg: v1
+
+# Real-Debrid API Token (loaded from environment)
+token: ${RD_API_KEY}
+
+# Server Settings
+host: "[::]"
+port: 9995
+
+# Performance & Behavior
+api_rate_limit_per_minute: 60
+torrents_rate_limit_per_minute: 25
+concurrent_workers: 32
+check_for_changes_every_secs: 10
+
+# File Management
+retain_rd_torrent_name: true
+retain_folder_name_extension: true
+enable_repair: false
+auto_delete_rar_torrents: false
+get_torrents_count: 5000

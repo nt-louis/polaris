@@ -1,0 +1,12 @@
+services:
+  nodecast-tv:
+    image: ghcr.io/technomancer702/nodecast-tv@sha256:caf34492517f5a827ca75e8d27d5a9a65155c12671d02ac335060cfc4df151fc
+    container_name: nodecast-tv
+    environment:
+      - NODE_ENV=production
+      - PORT=3010
+      - TZ=${TZ}
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

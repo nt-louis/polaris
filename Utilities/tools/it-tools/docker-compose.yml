@@ -1,0 +1,7 @@
+services:
+  it-tools:
+    image: ghcr.io/corentinth/it-tools:latest
+    container_name: it-tools
+    restart: unless-stopped
+    network_mode: "container:utilities-gateway-gluetun"
+    command: sh -c "sed -i 's/listen.*80;/listen 8085;/g' /etc/nginx/conf.d/default.conf; exec nginx -g 'daemon off;'"

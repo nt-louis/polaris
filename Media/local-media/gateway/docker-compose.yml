@@ -1,0 +1,88 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    container_name: media-gateway-core-gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "119:119"
+      - "8694:8694"
+      - "8694:8694/udp"
+      - "127.0.0.1:32400:32400"
+      - "4662:4662"
+      - "4665:4665/udp"
+      - "4672:4672/udp"
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
+      - WIREGUARD_ENDPOINT_IP=${WIREGUARD_ENDPOINT_IP}
+      - WIREGUARD_ENDPOINT_PORT=${WIREGUARD_ENDPOINT_PORT:-51820}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      - TZ=${TZ}
+      - DOT=off
+      - DNS_ADDRESS=1.1.1.1
+      - FIREWALL_INPUT_PORTS=80,443,119,8694,8096,8091,9191,5055,8085,8080,7878,8989,9696,7474,6767,8686,3001,8282,43211,32400,4173,4000,4662,4665,4672,8008
+      - FIREWALL_OUTBOUND_SUBNETS=100.64.0.0/10,172.16.0.0/12  # Allow outbound connections to the Tailnet & Docker Bridge (e.g. Authentik LDAP Outpost)
+      - HEALTH_SUCCESS_WAIT_DURATION=30s
+      - HTTP_CONTROL_SERVER_ADDRESS=:8002
+    volumes:
+      - ./state/gluetun:/gluetun
+    restart: unless-stopped
+
+  tailscale:
+    image: tailscale/tailscale:v1.102.3
+    container_name: media-gateway-core-tailscale
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_HOSTNAME=${TS_HOSTNAME}
+      - TS_EXTRA_ARGS=--accept-routes=false --accept-dns=false
+      - TS_SOCKET=/var/run/tailscale/tailscaled.sock
+    volumes:
+      - ./state/tailscale:/var/lib/tailscale
+      - tailscale-sock:/var/run/tailscale
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ip rule add lookup 52 priority 50 2>/dev/null; iptables -I INPUT -i tailscale0 -j ACCEPT 2>/dev/null; iptables-nft -I INPUT -i tailscale0 -j ACCEPT 2>/dev/null; iptables -I OUTPUT -o tailscale0 -j ACCEPT 2>/dev/null; iptables-nft -I OUTPUT -o tailscale0 -j ACCEPT 2>/dev/null; iptables -P FORWARD ACCEPT 2>/dev/null; iptables-nft -P FORWARD ACCEPT 2>/dev/null; iptables -t nat -I INPUT -i tailscale0 -p tcp --dport 32400 -j SNAT --to-source 10.0.0.1 2>/dev/null; iptables-nft -t nat -I INPUT -i tailscale0 -p tcp --dport 32400 -j SNAT --to-source 10.0.0.1 2>/dev/null; exec /usr/local/bin/containerboot"]
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    container_name: media-gateway-core-caddy
+    labels:
+      - "wud.tag.include=^2(\\.\\d+)*-alpine$"
+    network_mode: "service:gluetun"
+    environment:
+      - TAILNET_FQDN=${TAILNET_FQDN}
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy:/data
+      - ./config/caddy:/config
+      - tailscale-sock:/var/run/tailscale
+    restart: unless-stopped
+volumes:
+  tailscale-sock:

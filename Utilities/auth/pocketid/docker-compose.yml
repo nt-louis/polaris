@@ -1,0 +1,13 @@
+services:
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:v2.14.0
+    container_name: pocketid
+    restart: unless-stopped
+    environment:
+      - APP_URL=${APP_URL}
+      - TRUST_PROXY=${TRUST_PROXY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    ports:
+      - "127.0.0.1:3055:1411"
+    volumes:
+      - ./data:/app/data

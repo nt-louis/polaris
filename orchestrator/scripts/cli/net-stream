@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# net-stream — System-wide CLI wrapper for Net-Stream Stack Manager
+# ==============================================================================
+set -e
+
+find_repo_root() {
+    # 1. Check explicit environment override
+    if [ -n "$NET_STREAM_ROOT" ] && [ -d "$NET_STREAM_ROOT/orchestrator" ] && [ -f "$NET_STREAM_ROOT/manage.py" ]; then
+        echo "$NET_STREAM_ROOT"
+        return 0
+    fi
+
+    # 2. Check upward from current working directory
+    local cur="$PWD"
+    while [ "$cur" != "/" ] && [ -n "$cur" ]; do
+        if [ -f "$cur/manage.py" ] && [ -d "$cur/orchestrator" ]; then
+            echo "$cur"
+            return 0
+        fi
+        cur="$(dirname "$cur")"
+    done
+
+    # 3. Resolve real path if invoked via symlink
+    local source="${BASH_SOURCE[0]}"
+    while [ -h "$source" ]; do
+        local dir
+        dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
+        source="$(readlink "$source")"
+        [[ $source != /* ]] && source="$dir/$source"
+    done
+    local script_dir
+    script_dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
+
+    # Check upward from script directory (e.g. orchestrator/scripts/cli -> repo root)
+    local check_dir="$script_dir"
+    while [ "$check_dir" != "/" ] && [ -n "$check_dir" ]; do
+        if [ -f "$check_dir/manage.py" ] && [ -d "$check_dir/orchestrator" ]; then
+            echo "$check_dir"
+            return 0
+        fi
+        check_dir="$(dirname "$check_dir")"
+    done
+
+    # 4. Standard host installation fallback
+    if [ -d "~/polaris/orchestrator" ] && [ -f "~/polaris/manage.py" ]; then
+        echo "~/polaris"
+        return 0
+    fi
+
+    echo "Error: Could not locate net-stream repository root. Set NET_STREAM_ROOT or run from within the repository." >&2
+    exit 1
+}
+
+REPO_ROOT="$(find_repo_root)"
+export NET_STREAM_ROOT="$REPO_ROOT"
+
+# Select Python environment: local repo virtualenv if present, else system python3
+PYTHON="python3"
+if [ -x "$REPO_ROOT/.venv/bin/python3" ]; then
+    PYTHON="$REPO_ROOT/.venv/bin/python3"
+elif [ -x "$REPO_ROOT/venv/bin/python3" ]; then
+    PYTHON="$REPO_ROOT/venv/bin/python3"
+fi
+
+exec "$PYTHON" "$REPO_ROOT/manage.py" "$@"

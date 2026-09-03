@@ -1,0 +1,30 @@
+services:
+  shelfmark:
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/ || curl -f http://localhost:8084/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/calibrain/shelfmark:v1.3.15
+    container_name: shelfmark
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ}
+      - FLASK_PORT=8084
+      - SEARCH_MODE=${SEARCH_MODE:-universal}
+      - INGEST_DIR=${INGEST_DIR:-/books}
+      - USING_TOR=${USING_TOR:-false}
+      - HIDE_LOCAL_AUTH=${HIDE_LOCAL_AUTH:-false}
+      - DISABLE_LOCAL_AUTH=${DISABLE_LOCAL_AUTH:-false}
+      - OIDC_AUTO_REDIRECT=${OIDC_AUTO_REDIRECT:-false}
+      - FILE_ORGANIZATION=${FILE_ORGANIZATION:-organize}
+      - TEMPLATE_ORGANIZE=${TEMPLATE_ORGANIZE:-{Author}/{PrimaryTitle}/{Title} ({Year})}
+      - TEMPLATE_AUDIOBOOK_ORGANIZE=${TEMPLATE_AUDIOBOOK_ORGANIZE:-{Author}/{PrimaryTitle}/{Title} ({Year})}
+    network_mode: "container:media-gateway-comics-gluetun"
+    volumes:
+      - ./config:/config
+      - ${MEDIA_SHARE}:/share
+      - ${MEDIA_SHARE}/media/Books/Books:/books
+      - ${MEDIA_SHARE}/media/Books/Audiobooks:/audiobooks
+    restart: unless-stopped

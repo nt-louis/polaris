@@ -1,0 +1,82 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    container_name: media-gateway-stremio-utilities-gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
+      - WIREGUARD_ENDPOINT_IP=${WIREGUARD_ENDPOINT_IP}
+      - WIREGUARD_ENDPOINT_PORT=${WIREGUARD_ENDPOINT_PORT:-51820}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      - TZ=${TZ}
+      - FIREWALL_INPUT_PORTS=80,443,2375
+      - HEALTH_SUCCESS_WAIT_DURATION=30s
+    volumes:
+      - ./state/gluetun:/gluetun
+    networks:
+      - stremio_network
+    restart: unless-stopped
+
+  tailscale:
+    image: tailscale/tailscale:v1.102.3
+    container_name: media-gateway-stremio-utilities-tailscale
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_HOSTNAME=${TS_HOSTNAME}
+      - TS_EXTRA_ARGS=--accept-routes=false --accept-dns=false
+      - TS_SOCKET=/var/run/tailscale/tailscaled.sock
+    volumes:
+      - ./state/tailscale:/var/lib/tailscale
+      - tailscale-sock:/var/run/tailscale
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ip rule add lookup 52 priority 50 2>/dev/null; iptables -I INPUT -i tailscale0 -j ACCEPT 2>/dev/null; iptables-nft -I INPUT -i tailscale0 -j ACCEPT 2>/dev/null; iptables -I OUTPUT -o tailscale0 -j ACCEPT 2>/dev/null; iptables-nft -I OUTPUT -o tailscale0 -j ACCEPT 2>/dev/null; iptables -P FORWARD ACCEPT 2>/dev/null; iptables-nft -P FORWARD ACCEPT 2>/dev/null; exec /usr/local/bin/containerboot"]
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    container_name: media-gateway-stremio-utilities-caddy
+    labels:
+      - "wud.tag.include=^2(\\.\\d+)*-alpine$"
+    network_mode: "service:gluetun"
+    environment:
+      - TAILNET_FQDN=${TAILNET_FQDN}
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy:/data
+      - ./config/caddy:/config
+      - tailscale-sock:/var/run/tailscale
+    restart: unless-stopped
+volumes:
+  tailscale-sock:
+
+networks:
+  stremio_network:
+    name: stremio_network

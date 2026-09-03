@@ -1,0 +1,231 @@
+name: Docker Compose Validation
+
+on:
+  push:
+    branches: [main, epic/modular-orchestrator, "epic/**"]
+    paths:
+      - "**/docker-compose.yml"
+      - "**/.env.example"
+      - "orchestrator/registry/services.yaml"
+      - ".github/workflows/validate-compose.yml"
+  pull_request:
+    branches: [main, epic/modular-orchestrator, "epic/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Compose Syntax & Env Files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Determine infrastructure validation scope
+        id: scope
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- . \
+            ':(exclude)Docs/**' ':(exclude)**/*.md' ':(exclude)*.md'; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Python 3.11
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+
+      - name: Install PyYAML
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        run: pip install pyyaml
+
+      - name: Validate Docker Compose Syntax, Env Files, & Schema
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        run: |
+          python3 -c '
+          import os, sys, yaml, shutil, subprocess
+
+          errors = 0
+          tested = 0
+
+          for root, dirs, files in os.walk("."):
+              if "Archived" in root or ".git" in root or "node_modules" in root:
+                  continue
+              for f in files:
+                  if f == "docker-compose.yml":
+                      path = os.path.normpath(os.path.join(root, f))
+                      tested += 1
+                      compose_dir = os.path.dirname(path)
+
+                      try:
+                          with open(path, "r", encoding="utf-8") as s:
+                              doc = yaml.safe_load(s)
+                          print(f"[OK] YAML Syntax OK: {path}")
+                      except Exception as e:
+                          print(f"[ERROR] YAML Syntax Error in {path}: {e}")
+                          errors += 1
+                          continue
+
+                      if doc and "services" in doc:
+                          for svc_name, svc in doc["services"].items():
+                              if not isinstance(svc, dict):
+                                  continue
+                              env_file = svc.get("env_file")
+                              if env_file is None:
+                                  continue
+                              env_files = env_file if isinstance(env_file, list) else [env_file]
+                              for ef in env_files:
+                                  if isinstance(ef, dict):
+                                      ef = ef.get("path", ef.get("default", ""))
+                                  ef_path = os.path.join(compose_dir, str(ef))
+                                  if os.path.exists(ef_path):
+                                      continue
+                                  example_path = ef_path + ".example" if not ef_path.endswith(".example") else ef_path
+                                  if os.path.exists(example_path):
+                                      shutil.copy(example_path, ef_path)
+                                      print(f"  [INFO] Materialized {ef_path} from example for validation")
+                                  else:
+                                      print(f"[ERROR] Missing env_file: {ef_path} (referenced in {path}, service {svc_name})")
+                                      errors += 1
+
+                      try:
+                          env = os.environ.copy()
+                          env["MEDIA_SHARE"] = "/mnt/media"
+                          env["DOCKER_DATA_DIR"] = "/data"
+                          env.update({
+                              "DB_PASSWORD": "ci-validation-placeholder",
+                              "JWT_SECRET": "ci-validation-placeholder",
+                              "COOKIE_SECRET": "ci-validation-placeholder",
+                              "LINKWARDEN_DB_USER": "ci_linkwarden",
+                              "LINKWARDEN_DB_PASSWORD": "ci-validation-placeholder",
+                              "LINKWARDEN_DB_NAME": "ci_linkwarden",
+                              "LINKWARDEN_NEXTAUTH_SECRET": "ci-validation-placeholder",
+                              "NEXTCLOUD_MYSQL_PASSWORD": "ci-validation-placeholder",
+                              "NEXTCLOUD_MYSQL_ROOT_PASSWORD": "ci-validation-placeholder",
+                              "NEXTCLOUD_TRUSTED_DOMAINS": "ci.example.test",
+                              "PAPERLESS_URL": "https://ci.example.test",
+                              "PAPERLESS_SECRET_KEY": "ci-validation-placeholder",
+                              "WEBUI_URL": "https://ci.example.test",
+                              "WEBUI_SECRET_KEY": "ci-validation-placeholder",
+                              "OAUTH2_PROXY_CLIENT_ID": "ci-client",
+                              "OAUTH2_PROXY_CLIENT_SECRET": "ci-validation-placeholder",
+                              "OAUTH2_PROXY_OIDC_ISSUER_URL": "https://ci.example.test",
+                              "OAUTH2_PROXY_PROFILE_URL": "https://ci.example.test/userinfo",
+                              "OAUTH2_PROXY_REDIRECT_URL": "https://ci.example.test/oauth2/callback",
+                              "OAUTH2_PROXY_COOKIE_SECRET": "ci-validation-placeholder",
+                              "OAUTH2_PROXY_COOKIE_DOMAINS": ".example.test",
+                              "OAUTH2_PROXY_WHITELIST_DOMAINS": ".example.test",
+                              "OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL": "false",
+                          })
+                          result = subprocess.run(
+                              ["docker", "compose", "-f", path, "config", "-q"],
+                              capture_output=True, text=True, timeout=30, env=env
+                          )
+                          if result.returncode == 0:
+                              print(f"[OK] Compose Schema OK: {path}")
+                          else:
+                              print(f"[ERROR] Compose Schema Error in {path}:")
+                              print(result.stderr[:500])
+                              errors += 1
+                      except Exception as e:
+                          print(f"[WARNING] Could not validate schema for {path}: {e}")
+
+          print(f"\nTested {tested} compose files: {tested - errors} passed, {errors} failed.")
+          if errors > 0:
+              sys.exit(1)
+          '
+
+      - name: Validate Active Caddyfiles
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        shell: bash
+        run: |
+          python3 - <<'PY' > "$RUNNER_TEMP/net-stream-caddyfiles.txt"
+          import subprocess
+
+          paths = subprocess.check_output(
+              ["git", "ls-files", "*Caddyfile"], text=True
+          ).splitlines()
+          print("\n".join(path for path in paths if not path.startswith("Archived/")))
+          PY
+
+          failures=0
+          while IFS= read -r caddyfile; do
+            [ -z "$caddyfile" ] && continue
+            echo "Validating $caddyfile"
+            if ! docker run --rm \
+              --network none \
+              -e TAILNET_FQDN=example.tailnet.ts.net \
+              -e DOMAIN_SUFFIX=example.com \
+              -e N8N_DOMAIN=n8n.example.com \
+              -v "$GITHUB_WORKSPACE/$caddyfile:/etc/caddy/Caddyfile:ro" \
+              caddy:2.11.4-alpine \
+              caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile; then
+              failures=1
+            fi
+          done < "$RUNNER_TEMP/net-stream-caddyfiles.txt"
+
+          exit "$failures"
+
+      - name: Validate Registry Manifest Drift
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        run: |
+          python3 -c '
+          import os, sys, yaml, subprocess
+
+          manifest_path = os.path.normpath("orchestrator/registry/services.yaml")
+          if not os.path.exists(manifest_path):
+              print("[INFO] orchestrator/registry/services.yaml not present yet; skipping drift check.")
+              sys.exit(0)
+
+          with open(manifest_path, "r", encoding="utf-8") as f:
+              manifest = yaml.safe_load(f)
+
+          registered_paths = {os.path.normpath(svc["path"]) for svc in manifest.get("services", [])}
+
+          files = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+          active_compose = [
+              f for f in files 
+              if os.path.basename(f) in ("docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml", "mongo.compose.yaml")
+              and not f.startswith("Archived/")
+          ]
+          disk_paths = {os.path.dirname(os.path.normpath(f)) for f in active_compose}
+
+          missing_in_manifest = disk_paths - registered_paths
+          extra_in_manifest = registered_paths - disk_paths
+
+          errors = 0
+          if missing_in_manifest:
+              print("[ERROR] Unregistered compose projects found on disk:")
+              for p in sorted(missing_in_manifest):
+                  print(f"  - {p}")
+              errors += 1
+
+          if extra_in_manifest:
+              print("[ERROR] Manifest contains paths that do not exist on disk:")
+              for p in sorted(extra_in_manifest):
+                  print(f"  - {p}")
+              errors += 1
+
+          if errors > 0:
+              sys.exit(1)
+
+          print(f"[OK] Manifest is in sync with repository: {len(disk_paths)} services verified.")
+          '
+
+      - name: Record skipped heavy validation
+        if: github.event_name == 'pull_request' && steps.scope.outputs.run != 'true'
+        run: echo "Only documentation changed; the required check completed without running Compose or Caddy validation." >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,6 @@
+services:
+  bento-pdf:
+    image: bentopdfteam/bentopdf-simple:latest
+    container_name: bento-pdf
+    network_mode: "container:utilities-gateway-gluetun"
+    restart: unless-stopped

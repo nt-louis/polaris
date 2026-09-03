@@ -1,0 +1,77 @@
+services:
+  penpot-postgres:
+    image: postgres:15-alpine
+    container_name: penpot-postgres
+    restart: unless-stopped
+    networks:
+      - vps_b_net
+    environment:
+      - POSTGRES_DB=${PENPOT_DB_NAME}
+      - POSTGRES_USER=${PENPOT_DB_USER}
+      - POSTGRES_PASSWORD=${PENPOT_DB_PASSWORD}
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+
+  penpot-redis:
+    image: redis:7-alpine
+    container_name: penpot-redis
+    restart: unless-stopped
+    networks:
+      - vps_b_net
+    volumes:
+      - ./redis:/data
+
+  penpot-backend:
+    image: penpotapp/backend:2.17.2
+    container_name: penpot-backend
+    restart: unless-stopped
+    networks:
+      - vps_b_net
+    depends_on:
+      - penpot-postgres
+      - penpot-redis
+    environment:
+      - PENPOT_DATABASE_URI=postgresql://penpot-postgres/${PENPOT_DB_NAME}
+      - PENPOT_DATABASE_USERNAME=${PENPOT_DB_USER}
+      - PENPOT_DATABASE_PASSWORD=${PENPOT_DB_PASSWORD}
+      - PENPOT_REDIS_URI=redis://penpot-redis:6379/0
+      - PENPOT_SECRET_KEY=${PENPOT_SECRET_KEY}
+      - PENPOT_PUBLIC_URI=${PENPOT_PUBLIC_URI}
+      - PENPOT_FLAGS=enable-registration enable-smtp
+      - PENPOT_SMTP_DEFAULT_FROM=${PENPOT_SMTP_DEFAULT_FROM}
+      - PENPOT_SMTP_DEFAULT_REPLY_TO=${PENPOT_SMTP_DEFAULT_REPLY_TO}
+      - PENPOT_SMTP_HOST=${PENPOT_SMTP_HOST}
+      - PENPOT_SMTP_PORT=${PENPOT_SMTP_PORT}
+      - PENPOT_SMTP_USERNAME=${PENPOT_SMTP_USERNAME}
+      - PENPOT_SMTP_PASSWORD=${PENPOT_SMTP_PASSWORD}
+      - PENPOT_SMTP_TLS=${PENPOT_SMTP_TLS}
+      - PENPOT_SMTP_SSL=${PENPOT_SMTP_SSL}
+
+  penpot-frontend:
+    image: penpotapp/frontend:2.17.2
+    container_name: penpot-frontend
+    restart: unless-stopped
+    networks:
+      - vps_b_net
+    depends_on:
+      - penpot-backend
+    environment:
+      - PENPOT_FLAGS=enable-registration enable-smtp
+
+  penpot-exporter:
+    image: penpotapp/exporter:2.17.2
+    container_name: penpot-exporter
+    restart: unless-stopped
+    networks:
+      - vps_b_net
+    depends_on:
+      - penpot-backend
+    environment:
+      - PENPOT_PUBLIC_URI=http://penpot-frontend:80
+      - PENPOT_SECRET_KEY=${PENPOT_SECRET_KEY}
+      - PENPOT_REDIS_URI=redis://penpot-redis:6379/0
+
+networks:
+  vps_b_net:
+    name: vps_b_net
+    external: true

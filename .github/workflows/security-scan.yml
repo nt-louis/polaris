@@ -1,0 +1,64 @@
+name: Container Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/docker-compose.yml"
+      - ".github/workflows/security-scan.yml"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trivy-repo-scan:
+    name: Trivy Repository Config Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Determine security scan scope
+        id: scope
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- . \
+            ':(exclude)Docs/**' ':(exclude)**/*.md' ':(exclude)*.md'; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Trivy Vulnerability Scanner (Repository Configs)
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: 'config'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+          format: 'table'
+          exit-code: '1'
+
+      - name: Generate Summary Report
+        if: always()
+        run: |
+          echo "# Trivy Security Scan Summary" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ steps.scope.outputs.run }}" != "true" ]; then
+            echo "Only documentation changed; the required check completed without running the heavy scan." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Repository configuration scanning completed; image scanning is tracked separately in issue #88." >> "$GITHUB_STEP_SUMMARY"
+            echo "Check workflow output for detailed HIGH/CRITICAL configuration reports." >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -1,0 +1,429 @@
+schema_version: 1
+defaults:
+  compose_file: docker-compose.yml
+  vps: A
+  tier: 2
+nodes:
+- id: A
+  name: Primary Core & Media Stack
+  tailscale_name: vps
+- id: B
+  name: Secondary Stremio & Tooling Node
+  tailscale_name: vps2
+- id: C
+  name: Auxiliary Infrastructure Node
+  tailscale_name: vps-c
+services:
+- name: athenaeum
+  path: Media/comics/athenaeum
+  category: Media/comics
+  tier: 2
+  vps: A
+- name: audiobookshelf
+  path: Media/comics/audiobookshelf
+  category: Media/comics
+  tier: 2
+  vps: A
+- name: bindery
+  path: Media/comics/bindery
+  category: Media/comics
+  tier: 2
+  vps: A
+- name: gateway
+  path: Media/comics/gateway
+  category: Network (Gateways)
+  tier: 0
+  vps: A
+  custom_project: media-comics-gateway
+- name: grimmory
+  path: Media/comics/grimmory
+  category: Media/comics
+  tier: 2
+  vps: A
+- name: shelfmark
+  path: Media/comics/shelfmark
+  category: Media/comics
+  tier: 2
+  vps: A
+- name: suwayomi
+  path: Media/comics/suwayomi
+  category: Media/comics
+  tier: 2
+  vps: A
+- name: qbittorrent
+  path: Media/local-media/download-clients/qbittorrent
+  category: Media/local-media (Download Clients)
+  tier: 2
+  vps: A
+- name: sabnzbd
+  path: Media/local-media/download-clients/sabnzbd
+  category: Media/local-media (Download Clients)
+  tier: 2
+  vps: A
+- name: gateway
+  path: Media/local-media/gateway
+  category: Network (Gateways)
+  tier: 0
+  vps: A
+  custom_project: media-local-media-gateway
+- name: autobrr
+  path: Media/local-media/indexers/autobrr
+  category: Media/local-media (Indexers)
+  tier: 2
+  vps: A
+- name: flaresolverr
+  path: Media/local-media/indexers/flaresolverr
+  category: Media/local-media (Indexers)
+  tier: 2
+  vps: A
+- name: prowlarr
+  path: Media/local-media/indexers/prowlarr
+  category: Media/local-media (Indexers)
+  tier: 2
+  vps: A
+- name: recyclarr
+  path: Media/local-media/indexers/recyclarr
+  category: Media/local-media (Indexers)
+  tier: 2
+  vps: A
+- name: bazarr
+  path: Media/local-media/managers/bazarr
+  category: Media/local-media (Managers)
+  tier: 2
+  vps: A
+- name: dispatcharr
+  path: Media/local-media/managers/dispatcharr
+  category: Media/local-media (Managers)
+  tier: 2
+  vps: A
+- name: lidarr
+  path: Media/local-media/managers/lidarr
+  category: Media/local-media (Managers)
+  tier: 2
+  vps: A
+- name: radarr
+  path: Media/local-media/managers/radarr
+  category: Media/local-media (Managers)
+  tier: 2
+  vps: A
+- name: sonarr
+  path: Media/local-media/managers/sonarr
+  category: Media/local-media (Managers)
+  tier: 2
+  vps: A
+- name: tracearr
+  path: Media/local-media/managers/tracearr
+  category: Media/local-media (Managers)
+  tier: 2
+  vps: A
+- name: jellyfin
+  path: Media/local-media/players/jellyfin
+  category: Media/local-media (Players)
+  tier: 2
+  vps: A
+- name: monochrome
+  path: Media/local-media/players/monochrome
+  category: Media/local-media (Players)
+  tier: 2
+  vps: A
+  is_build_heavy: true
+- name: nodecast-tv
+  path: Media/local-media/players/nodecast-tv
+  category: Media/local-media (Players)
+  tier: 2
+  vps: A
+- name: seerr
+  path: Media/local-media/requests/seerr
+  category: Media/local-media (Requests)
+  tier: 2
+  vps: A
+- name: remux
+  path: Media/local-media/tools/remux
+  category: Media/local-media (Tools)
+  tier: 2
+  vps: A
+- name: unpackerr
+  path: Media/local-media/tools/unpackerr
+  category: Media/local-media (Tools)
+  tier: 2
+  vps: A
+- name: yamtrack
+  path: Media/local-media/tools/yamtrack
+  category: Media/local-media (Tools)
+  tier: 2
+  vps: A
+- name: aiomanager
+  path: Media/stremio/addons/aiomanager
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: aiometadata
+  path: Media/stremio/addons/aiometadata
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: aiostreams
+  path: Media/stremio/addons/aiostreams
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: comet
+  path: Media/stremio/addons/comet
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: gateway
+  path: Media/stremio/addons/gateway
+  category: Network (Gateways)
+  tier: 0
+  vps: B
+  custom_project: media-stremio-addons-gateway
+- name: gateway-proton
+  path: Media/stremio/addons/gateway-proton
+  category: Network (Gateways)
+  tier: 0
+  vps: B
+  custom_project: media-stremio-addons-gateway-proton
+- name: nzbdav
+  path: Media/stremio/addons/nzbdav
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: nzbhydra2
+  path: Media/stremio/addons/nzbhydra2
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: streamnzb
+  path: Media/stremio/addons/streamnzb
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: streampicker
+  path: Media/stremio/addons/streampicker
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: stremthru
+  path: Media/stremio/addons/stremthru
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: watchly
+  path: Media/stremio/addons/watchly
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: gateway
+  path: Media/stremio/utilities/gateway
+  category: Network (Gateways)
+  tier: 0
+  vps: B
+  custom_project: media-stremio-utilities-gateway
+- name: jackett
+  path: Media/stremio/utilities/jackett
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: mediaflow-proxy
+  path: Media/stremio/utilities/mediaflow-proxy
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: scrob
+  path: Media/stremio/utilities/scrob
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: syncio
+  path: Media/stremio/utilities/syncio
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: vps-b-agents
+  path: Media/stremio/utilities/vps-b-agents
+  category: Media/stremio
+  tier: 2
+  vps: B
+- name: Network
+  path: Network
+  category: Other
+  tier: 0
+  vps: A
+  custom_project: network
+- name: docker-proxy
+  path: Utilities/admin/docker-proxy
+  category: Utilities (Admin)
+  tier: 1
+  vps: A
+- name: dockhand
+  path: Utilities/admin/dockhand
+  category: Utilities (Admin)
+  tier: 1
+  vps: A
+- name: hawser
+  path: Utilities/admin/hawser
+  category: Utilities (Admin)
+  tier: 1
+  vps: B
+- name: homarr
+  path: Utilities/admin/homarr
+  category: Utilities (Admin)
+  tier: 1
+  vps: A
+- name: infisical
+  path: Utilities/admin/infisical
+  category: Utilities (Admin)
+  tier: 1
+  vps: B
+- name: oauth2-proxy
+  path: Utilities/auth/oauth2-proxy
+  category: Utilities (Auth)
+  tier: 1
+  vps: A
+- name: pocketid
+  path: Utilities/auth/pocketid
+  category: Utilities (Auth)
+  tier: 1
+  vps: A
+- name: vaultwarden
+  path: Utilities/auth/vaultwarden
+  category: Utilities (Auth)
+  tier: 1
+  vps: A
+- name: linkwarden
+  path: Utilities/bookmarks-notes/linkwarden
+  category: Utilities (Bookmarks & Notes)
+  tier: 2
+  vps: A
+- name: memos
+  path: Utilities/bookmarks-notes/memos
+  category: Utilities (Bookmarks & Notes)
+  tier: 2
+  vps: A
+- name: nextcloud
+  path: Utilities/cloud-docs/nextcloud
+  category: Utilities (Cloud & Docs)
+  tier: 2
+  vps: A
+- name: gateway
+  path: Utilities/cloud-docs/nextcloud/gateway
+  category: Network (Gateways)
+  tier: 0
+  vps: A
+  custom_project: utilities-cloud-docs-nextcloud-gateway
+- name: paperless-ngx
+  path: Utilities/cloud-docs/paperless-ngx
+  category: Utilities (Cloud & Docs)
+  tier: 2
+  vps: A
+- name: cloudflare-tunnel
+  path: Utilities/cloudflare-tunnel
+  category: Utilities
+  tier: 1
+  vps: A
+- name: exit-node
+  path: Utilities/exit-node
+  category: Network (Gateways)
+  tier: 0
+  vps: A
+  custom_project: utilities-exit-node
+- name: gateway
+  path: Utilities/gateway
+  category: Network (Gateways)
+  tier: 0
+  vps: A
+  custom_project: utilities-gateway
+- name: gateway-b
+  path: Utilities/gateway-b
+  category: Network (Gateways)
+  tier: 0
+  vps: B
+  custom_project: utilities-gateway-b
+- name: fmhy
+  path: Utilities/information/fmhy
+  category: Utilities (Information)
+  tier: 2
+  vps: A
+  is_build_heavy: true
+- name: freshrss
+  path: Utilities/information/freshrss
+  category: Utilities (Information)
+  tier: 2
+  vps: A
+- name: beszel
+  path: Utilities/monitoring/beszel
+  category: Utilities (Monitoring)
+  tier: 3
+  vps: A
+- name: beszel-agent
+  path: Utilities/monitoring/beszel-agent
+  category: Utilities (Monitoring)
+  tier: 3
+  vps: B
+- name: dozzle
+  path: Utilities/monitoring/dozzle
+  category: Utilities (Monitoring)
+  tier: 3
+  vps: A
+- name: uptime-kuma
+  path: Utilities/monitoring/uptime-kuma
+  category: Utilities (Monitoring)
+  tier: 3
+  vps: A
+- name: netbird-server
+  path: Utilities/netbird-server
+  category: Utilities
+  tier: 2
+  vps: A
+  custom_project: utilities-netbird-server
+- name: searxng
+  path: Utilities/search/searxng
+  category: Utilities (Search)
+  tier: 2
+  vps: A
+- name: apprise
+  path: Utilities/tools/apprise
+  category: Utilities (Tools)
+  tier: 2
+  vps: A
+- name: bento-pdf
+  path: Utilities/tools/bento-pdf
+  category: Utilities (Tools)
+  tier: 2
+  vps: A
+- name: excalidraw
+  path: Utilities/tools/excalidraw
+  category: Utilities (Tools)
+  tier: 2
+  vps: B
+- name: it-tools
+  path: Utilities/tools/it-tools
+  category: Utilities (Tools)
+  tier: 2
+  vps: A
+- name: n8n
+  path: Utilities/tools/n8n
+  category: Utilities (Tools)
+  tier: 2
+  vps: A
+- name: open-webui
+  path: Utilities/tools/open-webui
+  category: Utilities (Tools)
+  tier: 2
+  vps: B
+- name: penpot
+  path: Utilities/tools/penpot
+  category: Utilities (Tools)
+  tier: 2
+  vps: B
+- name: stirling-pdf
+  path: Utilities/tools/stirling-pdf
+  category: Utilities (Tools)
+  tier: 2
+  vps: A
+- name: supabase
+  path: Utilities/tools/supabase
+  category: Utilities (Tools)
+  tier: 2
+  vps: B

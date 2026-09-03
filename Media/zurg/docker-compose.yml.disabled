@@ -1,0 +1,52 @@
+services:
+  zurg-rd:
+    image: ghcr.io/debridmediamanager/zurg-testing:latest
+    container_name: media-zurg-rd
+    restart: unless-stopped
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config-rd.yml:/app/config.yml
+      - ./data-rd:/app/data
+    environment:
+      - RD_API_KEY=${RD_API_KEY}
+
+  rclone-rd:
+    image: rclone/rclone:latest
+    container_name: media-zurg-rclone-rd
+    restart: unless-stopped
+    network_mode: "container:media-gateway-core-gluetun"
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse:/dev/fuse
+    volumes:
+      - ./rclone-zurg-rd.conf:/config/rclone/rclone.conf
+      - ${MEDIA_SHARE}/zurg/rd:/data:shared
+      - ./cache-rd:/cache
+    depends_on:
+      - zurg-rd
+    command: "mount zurg: /data --allow-other --allow-non-empty --dir-cache-time 10s --vfs-cache-mode full --cache-dir /cache --uid ${PUID:-1000} --gid ${GUID:-1000} --umask 002"
+
+  rclone-tb:
+    image: rclone/rclone:latest
+    container_name: media-zurg-rclone-tb
+    restart: unless-stopped
+    network_mode: "container:media-gateway-core-gluetun"
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse:/dev/fuse
+    volumes:
+      - ${MEDIA_SHARE}/zurg/tb:/data:shared
+      - ./cache-tb:/cache
+    environment:
+      - RCLONE_CONFIG_TORBOX_TYPE=webdav
+      - RCLONE_CONFIG_TORBOX_URL=https://webdav.torbox.app
+      - RCLONE_CONFIG_TORBOX_VENDOR=other
+      - RCLONE_CONFIG_TORBOX_USER=${TB_EMAIL}
+      - RCLONE_CONFIG_TORBOX_PASS=${TB_PASS}
+    command: "mount torbox: /data --allow-other --allow-non-empty --dir-cache-time 15s --vfs-cache-mode full --cache-dir /cache --uid ${PUID:-1000} --gid ${GUID:-1000} --umask 002"

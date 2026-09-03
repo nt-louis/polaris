@@ -1,0 +1,18 @@
+services:
+  dispatcharr:
+    image: ghcr.io/dispatcharr/dispatcharr:0.30.0
+    container_name: dispatcharr
+    restart: unless-stopped
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./data:/data
+    environment:
+      - DISPATCHARR_ENV=aio
+      - REDIS_HOST=localhost
+      - CELERY_BROKER_URL=redis://localhost:6379/0
+      - DISPATCHARR_LOG_LEVEL=info
+      - UWSGI_NICE_LEVEL=-5
+      - CELERY_NICE_LEVEL=5
+      - TZ=${TZ}
+    cap_add:
+      - SYS_NICE

@@ -1,0 +1,48 @@
+services:
+  jackett:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:9117/UI/Dashboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/linuxserver/jackett:latest
+    container_name: jackett
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ}
+      - AUTO_UPDATE=true
+    volumes:
+      - ./config:/config
+    restart: unless-stopped
+
+  redis:
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: redis:7-alpine
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    command: ["redis-server", "--port", "6382"]
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+
+  trawl:
+    image: ghcr.io/germondai/trawl:latest
+    container_name: trawl
+    network_mode: "container:media-gateway-stremio-utilities-gluetun"
+    restart: unless-stopped
+    shm_size: 1gb
+    mem_limit: 3g
+    environment:
+      REDIS_URL: redis://127.0.0.1:6382
+      BROWSER_POOL_SIZE: 5
+      BROWSER_ACQUIRE_TIMEOUT_MS: 15000
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
+      interval: 30s

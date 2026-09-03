@@ -1,0 +1,11 @@
+services:
+  changedetection:
+    image: dgtlmoon/changedetection.io:latest
+    container_name: changedetection
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - PORT=8087
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ./data:/datastore
+    restart: unless-stopped

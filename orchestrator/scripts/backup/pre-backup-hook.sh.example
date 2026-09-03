@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Pre-Backup Hook Script Example (pre-backup-hook.sh.example)
+# ==============================================================================
+# Copy this file to "pre-backup-hook.sh" and customize it to run clean database 
+# dumps or prep work before Restic starts snapshotting.
+#
+# Logical SQL dumps and SQLite online backups compress by 85-90% and deduplicate
+# cleanly across snapshots, eliminating binary page churn.
+#
+# Since this runs as part of the backup process, it executes with root privileges.
+# ==============================================================================
+
+# Example 1: PostgreSQL Container Online Dump (e.g. Linkwarden / Supabase / Penpot / Coolify)
+# if docker ps --format '{{.Names}}' | grep -q "^linkwarden-db$"; then
+#   echo "Dumping Linkwarden PostgreSQL database..."
+#   docker exec -t linkwarden-db pg_dump -U postgres -d postgres > /docker/appdata/linkwarden/dump.sql
+# fi
+
+# Example 2: SQLite Online Backup (e.g. Sonarr / Radarr / Uptime Kuma / Yamtrack)
+# Online backup locks the database for milliseconds and produces a clean, consistent snapshot without WAL churn:
+# if command -v sqlite3 &>/dev/null && [[ -f "/docker/appdata/sonarr/sonarr.db" ]]; then
+#   echo "Creating consistent online SQLite backup for Sonarr..."
+#   sqlite3 /docker/appdata/sonarr/sonarr.db ".backup '/docker/appdata/sonarr/sonarr_backup.db'"
+# fi
+
+# Example 3: MariaDB / MySQL Container Dump (e.g. Nextcloud)
+# if docker ps --format '{{.Names}}' | grep -q "^nextcloud-db$"; then
+#   echo "Dumping Nextcloud MariaDB database..."
+#   docker exec nextcloud-db mariadb-dump --all-databases -u root -p"${MYSQL_ROOT_PASSWORD}" > /docker/appdata/nextcloud/all_databases.sql
+# fi
+
+# Example 4: Ephemeral Docker & Temp Directory Pruning
+# Remove stale temp files older than 7 days before Restic scans:
+# find /tmp -maxdepth 1 -name "net-stream-*" -mtime +7 -exec rm -f {} +

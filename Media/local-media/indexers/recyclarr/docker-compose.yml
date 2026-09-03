@@ -1,0 +1,13 @@
+services:
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:8.7.2
+    container_name: recyclarr
+    user: "${PUID:-1000}:${PGID:-1000}"
+    restart: unless-stopped
+    network_mode: "container:media-gateway-core-gluetun"
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./config:/config
+      - ./recyclarr.yml:/config/recyclarr.yml
+      - ./secrets.yml:/config/secrets.yml

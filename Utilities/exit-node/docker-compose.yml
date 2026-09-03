@@ -1,0 +1,96 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    container_name: utilities-exit-node-gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
+      - WIREGUARD_ENDPOINT_IP=${WIREGUARD_ENDPOINT_IP}
+      - WIREGUARD_ENDPOINT_PORT=${WIREGUARD_ENDPOINT_PORT:-51820}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      - TZ=${TZ}
+      - FIREWALL=off
+      - HEALTH_SUCCESS_WAIT_DURATION=30s
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
+    ports:
+      - "500:500/udp"
+    volumes:
+      - ./state/gluetun:/gluetun
+    networks:
+      - default
+      - network_default
+    restart: unless-stopped
+
+
+  tailscale:
+    image: tailscale/tailscale:v1.102.3
+    container_name: utilities-exit-node-tailscale
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_HOSTNAME=${TS_HOSTNAME}
+      - TS_EXTRA_ARGS=--advertise-exit-node --accept-dns=false
+      - TS_SOCKET=/var/run/tailscale/tailscaled.sock
+    volumes:
+      - ./state/tailscale:/var/lib/tailscale
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["(while true; do iptables-legacy -C ts-input -i wt0 -j ACCEPT 2>/dev/null || iptables-legacy -I ts-input 1 -i wt0 -j ACCEPT 2>/dev/null; sleep 5; done) & ip rule add lookup 52 priority 50 2>/dev/null; iptables -I INPUT -i tailscale0 -j ACCEPT 2>/dev/null; iptables-nft -I INPUT -i tailscale0 -j ACCEPT 2>/dev/null; iptables -I OUTPUT -o tailscale0 -j ACCEPT 2>/dev/null; iptables-nft -o tailscale0 -j ACCEPT 2>/dev/null; iptables -P FORWARD ACCEPT 2>/dev/null; iptables-nft -P FORWARD ACCEPT 2>/dev/null; exec /usr/local/bin/containerboot"]
+    restart: unless-stopped
+
+  netbird:
+    image: netbirdio/netbird:latest
+    container_name: utilities-exit-node-netbird
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - NB_SETUP_KEY=${NB_SETUP_KEY}
+      - NB_HOSTNAME=${NB_HOSTNAME:-exit-node-netbird}
+      - NB_MANAGEMENT_URL=${NB_MANAGEMENT_URL:-https://api.netbird.io:443}
+      - NB_LOG_LEVEL=info
+      - NB_WIREGUARD_PORT=500
+    volumes:
+      - ./state/netbird:/var/lib/netbird
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ip rule add to 100.91.0.0/16 lookup main priority 90 2>/dev/null; iptables -I INPUT -i wt0 -j ACCEPT 2>/dev/null; iptables-nft -I INPUT -i wt0 -j ACCEPT 2>/dev/null; iptables-legacy -I INPUT -i wt0 -j ACCEPT 2>/dev/null; iptables -I OUTPUT -o wt0 -j ACCEPT 2>/dev/null; iptables-nft -I OUTPUT -o wt0 -j ACCEPT 2>/dev/null; iptables-legacy -I OUTPUT -o wt0 -j ACCEPT 2>/dev/null; iptables -P FORWARD ACCEPT 2>/dev/null; iptables-nft -P FORWARD ACCEPT 2>/dev/null; sed -i 's/\"WgPort\": [0-9]*/\"WgPort\": 500/g' /var/lib/netbird/default.json 2>/dev/null; exec /usr/local/bin/netbird-entrypoint.sh"]
+    restart: unless-stopped
+
+networks:
+  default:
+  network_default:
+    name: network_default
+    external: true
+

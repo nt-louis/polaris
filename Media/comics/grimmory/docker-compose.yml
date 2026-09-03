@@ -1,0 +1,46 @@
+services:
+  grimmory:
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:6060/manifest.json"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: grimmory/grimmory:v3.3.3
+    container_name: grimmory
+    network_mode: "container:media-gateway-comics-gluetun"
+    environment:
+      - USER_ID=${PUID:-1000}
+      - GROUP_ID=${PGID:-1000}
+      - TZ=${TZ}
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_USERNAME=${DB_USER}
+      - DATABASE_PASSWORD=${DB_PASSWORD}
+      - BOOKLORE_PORT=${BOOKLORE_PORT}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+      - ${MEDIA_SHARE}/media/Books:/books
+      - ./bookdrop:/bookdrop
+    restart: unless-stopped
+
+  mariadb:
+    image: ghcr.io/linuxserver/mariadb:11.8.8
+    network_mode: "container:media-gateway-comics-gluetun"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./mariadb/config:/config
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

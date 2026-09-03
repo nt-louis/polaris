@@ -1,0 +1,20 @@
+services:
+  qbittorrent:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/hotio/qbittorrent:release-5.2.3
+    container_name: qbittorrent
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=8694
+    network_mode: "container:media-gateway-core-gluetun"
+    volumes:
+      - ./config:/config
+      - ${MEDIA_SHARE}:/share
+    restart: unless-stopped

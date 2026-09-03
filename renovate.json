@@ -1,0 +1,197 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "dependencyDashboard": true,
+  "minimumReleaseAge": "3 days",
+  "ignorePaths": [
+    "**/Archived/**",
+    "**/orchestrator/**",
+    ".github/workflows/**"
+  ],
+  "prConcurrentLimit": 15,
+  "prHourlyLimit": 0,
+  "rebaseWhen": "behind-base-branch",
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageAction": "update",
+  "labels": [
+    "renovate",
+    "dependencies"
+  ],
+  "gitAuthor": "Renovate Bot <bot@renovateapp.com>",
+  "docker-compose": {
+    "enabled": true,
+    "managerFilePatterns": [
+      "/(^|/)docker-compose\\.ya?ml$/",
+      "/(^|/)compose\\.ya?ml$/"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Handle hotio release-* tag formatting using regex versioning",
+      "versioning": "regex:^release-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:-(?<build>.*))?$",
+      "matchPackageNames": [
+        "ghcr.io/hotio/**"
+      ]
+    },
+    {
+      "description": "Handle LinuxServer.io build suffixes (-ls*) using loose versioning",
+      "versioning": "loose",
+      "matchPackageNames": [
+        "lscr.io/linuxserver/**",
+        "linuxserver/**",
+        "ghcr.io/linuxserver/**"
+      ]
+    },
+    {
+      "description": "Handle TimescaleDB dual PostgreSQL/Timescale version tags",
+      "versioning": "regex:^pg(?<compatibility>\\d+(?:\\.\\d+)?)-ts(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+.*)$",
+      "matchPackageNames": [
+        "timescale/timescaledb/**"
+      ]
+    },
+    {
+      "description": "Handle CalVer/date-based tags for cloudflared",
+      "matchPackageNames": [
+        "cloudflare/cloudflared"
+      ],
+      "versioning": "loose"
+    },
+    {
+      "description": "Group Python dev dependencies and tooling into auto-merging PR",
+      "matchManagers": [
+        "pip_requirements"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "groupName": "Python Dependencies & Tooling",
+      "groupSlug": "python-deps-tooling",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "labels": [
+        "renovate",
+        "dependencies",
+        "python"
+      ]
+    },
+    {
+      "description": "Disable updates for locally-built images",
+      "matchPackageNames": [
+        "local/monochrome",
+        "local/fmhy"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Ignore legacy 1.0.0 tag for lostb1t/remux",
+      "matchPackageNames": [
+        "ghcr.io/lostb1t/remux"
+      ],
+      "allowedVersions": "<1.0.0"
+    },
+    {
+      "description": "Group all non-critical patch & digest updates into 1 single auto-merging PR",
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "matchUpdateTypes": [
+        "patch",
+        "digest"
+      ],
+      "groupName": "Weekly Non-Critical Patch Updates",
+      "groupSlug": "weekly-non-critical-patch-updates",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "labels": [
+        "renovate",
+        "dependencies"
+      ]
+    },
+    {
+      "description": "Group all non-critical minor updates into 1 single PR requiring review",
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "groupName": "Weekly Non-Critical Minor Updates",
+      "groupSlug": "weekly-non-critical-minor-updates",
+      "automerge": false,
+      "labels": [
+        "renovate",
+        "dependencies",
+        "needs-review"
+      ]
+    },
+    {
+      "description": "Group all non-critical major updates into 1 single PR requiring review",
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "groupName": "Weekly Non-Critical Major Updates",
+      "groupSlug": "weekly-non-critical-major-updates",
+      "automerge": false,
+      "labels": [
+        "renovate",
+        "dependencies",
+        "needs-review",
+        "major-upgrade"
+      ]
+    },
+    {
+      "description": "Never auto-merge infrastructure-critical services \u2014 always require isolated review",
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "matchFileNames": [
+        "Utilities/admin/coolify/**",
+        "Utilities/admin/infisical/**",
+        "Utilities/auth/**",
+        "Utilities/exit-node/**",
+        "Utilities/gateway/**",
+        "Utilities/gateway-b/**",
+        "Utilities/cloud-docs/nextcloud/gateway/**",
+        "Media/stremio/utilities/gateway/**",
+        "Media/stremio/addons/gateway/**",
+        "Media/stremio/addons/gateway-proton/**",
+        "Media/local-media/gateway/**",
+        "Media/comics/gateway/**",
+        "Network/**"
+      ],
+      "groupName": null,
+      "automerge": false,
+      "labels": [
+        "renovate",
+        "dependencies",
+        "needs-review",
+        "critical-infra"
+      ]
+    },
+    {
+      "description": "Allow cloudflared patch updates to auto-merge as non-critical across all stack directories",
+      "matchPackageNames": [
+        "cloudflare/cloudflared"
+      ],
+      "matchUpdateTypes": [
+        "patch",
+        "digest"
+      ],
+      "groupName": "Weekly Non-Critical Patch Updates",
+      "groupSlug": "weekly-non-critical-patch-updates",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    }
+  ]
+}

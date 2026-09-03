@@ -1,0 +1,8 @@
+services:
+  memos:
+    image: neosmemo/memos:0.30.0
+    container_name: memos
+    network_mode: "container:utilities-gateway-gluetun"
+    volumes:
+      - ./data:/var/opt/memos
+    restart: unless-stopped

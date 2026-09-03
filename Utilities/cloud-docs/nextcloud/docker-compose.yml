@@ -1,0 +1,114 @@
+services:
+  rclone-cloud:
+    image: rclone/rclone:1.75.0
+    container_name: nextcloud-rclone
+    restart: unless-stopped
+    network_mode: "container:utilities-gateway-cloud-gluetun"
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse:/dev/fuse
+    volumes:
+      - ./cloud-data:/data:shared
+      - ./cache:/cache
+    environment:
+      # Rclone Base Remote Configuration (Passed from .env)
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_TYPE
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_CLIENT_ID
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_CLIENT_SECRET
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_TOKEN
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_URL
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_VENDOR
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_USER
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_PASS
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_HOST
+      - RCLONE_CONFIG_NEXTCLOUD_BASE_PORT
+      # Rclone Crypt Remote Configuration (Passed from .env)
+      - RCLONE_CONFIG_NEXTCLOUD_CRYPT_TYPE
+      - RCLONE_CONFIG_NEXTCLOUD_CRYPT_REMOTE
+      - RCLONE_CONFIG_NEXTCLOUD_CRYPT_FILENAME_ENCRYPTION
+      - RCLONE_CONFIG_NEXTCLOUD_CRYPT_DIRECTORY_NAME_ENCRYPTION
+      - RCLONE_CONFIG_NEXTCLOUD_CRYPT_PASSWORD
+      - RCLONE_CONFIG_NEXTCLOUD_CRYPT_PASSWORD2
+    # Mounts the crypt remote to /data.
+    # UID/GID 33 corresponds to www-data (the user running Nextcloud), ensuring perfect write permissions.
+    command: "mount nextcloud_crypt: /data --allow-other --allow-non-empty --dir-cache-time 15s --vfs-cache-mode full --cache-dir /cache --uid 33 --gid 33 --umask 007"
+    healthcheck:
+      test: ["CMD-SHELL", "mountpoint -q /data"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nextcloud:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/status.php || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: nextcloud:34.0.3
+    container_name: nextcloud
+    network_mode: "container:utilities-gateway-cloud-gluetun"
+    volumes:
+      - ./data:/var/www/html
+      # Mount the decrypted Rclone crypt directory into Nextcloud's data folder
+      - ./cloud-data:/var/www/html/data:rslave
+       # Mount PHP JIT disable configuration
+      - ./disable-jit.ini:/usr/local/etc/php/conf.d/z-disable-jit.ini:ro
+    environment:
+      - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD:?NEXTCLOUD_MYSQL_PASSWORD must be set}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=127.0.0.1
+      - REDIS_HOST=127.0.0.1
+      - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS} cloud.your-tailnet-name.ts.net 127.0.0.1
+      # Reverse Proxy Configurations
+      - TRUSTED_PROXIES=127.0.0.1 172.16.0.0/12 10.0.0.0/8 192.168.0.0/16 100.64.0.0/10
+      - OVERWRITEPROTOCOL=https
+      # Security & System Configurations
+      - NC_default_phone_region=${NEXTCLOUD_DEFAULT_PHONE_REGION:-US}
+      - NC_maintenance_window_start=${NEXTCLOUD_MAINTENANCE_WINDOW_START:-1}
+    # Rebind internal Apache listening port from 80 to 8080 to avoid conflicts with gateway Caddy
+    command: ["sh", "-c", "sed -i 's/Listen 80[[:space:]]*$/Listen 8080/' /etc/apache2/ports.conf && find /etc/apache2/sites-enabled/ -type f -name '*.conf' -exec sed -i 's/<VirtualHost \\*:80>/<VirtualHost \\*:8080>/' {} + && exec /entrypoint.sh apache2-foreground"]
+    depends_on:
+      nextcloud-db:
+        condition: service_started
+      nextcloud-redis:
+        condition: service_started
+      rclone-cloud:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nextcloud-db:
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: mariadb:10.11
+    container_name: nextcloud-db
+    labels:
+      - "wud.tag.include=^10\\.11(\\.\\d+)*$"
+    network_mode: "container:utilities-gateway-cloud-gluetun"
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_MYSQL_ROOT_PASSWORD:?NEXTCLOUD_MYSQL_ROOT_PASSWORD must be set}
+      - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD:?NEXTCLOUD_MYSQL_PASSWORD must be set}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+    restart: unless-stopped
+
+  nextcloud-redis:
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: redis:8-alpine
+    container_name: nextcloud-redis
+    network_mode: "container:utilities-gateway-cloud-gluetun"
+    volumes:
+      - ./redis:/data
+    restart: unless-stopped

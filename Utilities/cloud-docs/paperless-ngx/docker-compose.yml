@@ -1,0 +1,43 @@
+services:
+  paperless-web:
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8084/api/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: ghcr.io/paperless-ngx/paperless-ngx:3.1.2
+    container_name: paperless-web
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - PAPERLESS_REDIS=redis://127.0.0.1:6380
+      - PAPERLESS_DBENGINE=sqlite
+      - PAPERLESS_PORT=8084
+      - PAPERLESS_TIME_ZONE=${TZ:-America/New_York}
+      - PAPERLESS_OCR_LANGUAGE=eng
+      - PAPERLESS_URL=${PAPERLESS_URL}
+      - PAPERLESS_CSRF_TRUSTED_ORIGINS=${PAPERLESS_URL}
+      - PAPERLESS_SECRET_KEY=${PAPERLESS_SECRET_KEY:?PAPERLESS_SECRET_KEY must be set}
+      # Header authentication integration with Authentik Forward Auth
+      - PAPERLESS_HTTP_REMOTE_USER_HEADER=HTTP_X_AUTHENTIK_USERNAME
+    volumes:
+      - ./data:/usr/src/paperless/data
+      - ./media:/usr/src/paperless/media
+      - ./export:/usr/src/paperless/export
+      - ./consume:/usr/src/paperless/consume
+    depends_on:
+      - paperless-redis
+    restart: unless-stopped
+
+  paperless-redis:
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -p 6380 ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: redis:8-alpine
+    container_name: paperless-redis
+    command: ["redis-server", "--port", "6380"]
+    network_mode: "container:utilities-gateway-gluetun"
+    volumes:
+      - ./redis:/data
+    restart: unless-stopped

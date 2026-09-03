@@ -1,0 +1,11 @@
+services:
+  tunnel:
+    image: cloudflare/cloudflared:2026.8.3
+    container_name: cloudflare-tunnel
+    network_mode: host
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run

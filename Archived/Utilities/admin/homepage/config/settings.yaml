@@ -1,0 +1,30 @@
+title: Net-Stream Portal
+theme: dark
+background:
+  image: https://4kwallpapers.com/images/walls/thumbs_2t/26735.jpg
+  blur: md
+  saturate: 120
+  brightness: 35
+  opacity: 100
+cardBlur: md
+headerStyle: clean
+
+layout:
+  Media Streamers:
+    style: grid
+    columns: 5
+  Media Requests & Management:
+    style: grid
+    columns: 4
+  Downloads:
+    style: grid
+    columns: 3
+  Cloud & Personal Utilities:
+    style: grid
+    columns: 4
+  Stremio & Usenet Addons (VPS B):
+    style: grid
+    columns: 4
+  Administration & Monitoring:
+    style: grid
+    columns: 4

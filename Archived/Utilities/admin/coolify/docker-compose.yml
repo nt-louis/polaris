@@ -1,0 +1,75 @@
+services:
+  coolify:
+    image: ghcr.io/coollabsio/coolify@sha256:3a27ba5f7f98ff7763a0a4d6715ec36e564f9622eea8f492c46f90716ea2525f
+    container_name: coolify
+    restart: always
+    working_dir: /var/www/html
+    network_mode: host
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - postgres
+      - redis
+      - soketi
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./nginx-http.conf:/etc/nginx/site-opts.d/http.conf:ro
+      - ./data:/data
+    environment:
+      - APP_ENV=production
+      - APP_KEY=${COOLIFY_APP_KEY}
+      - DB_PASSWORD=${COOLIFY_DB_PASSWORD}
+      - DB_USERNAME=postgres
+      - REDIS_PASSWORD=${COOLIFY_REDIS_PASSWORD}
+      - DB_HOST=127.0.0.1
+      - REDIS_HOST=127.0.0.1
+      - PUSHER_HOST=127.0.0.1
+      - NGINX_HTTP_PORT=8000
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: coolify-db
+    restart: always
+    networks:
+      - coolify
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=${COOLIFY_DB_PASSWORD}
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=coolify
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: coolify-redis
+    restart: always
+    networks:
+      - coolify
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: redis-server --requirepass ${COOLIFY_REDIS_PASSWORD}
+    volumes:
+      - ./redis:/data
+
+  soketi:
+    image: 'quay.io/soketi/soketi:latest-16-alpine'
+    container_name: coolify-realtime
+    restart: always
+    networks:
+      - coolify
+    ports:
+      - "127.0.0.1:6001:6001"
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.7.3
+    container_name: coolify-cloudflared
+    restart: unless-stopped
+    network_mode: host
+    command: tunnel --no-autoupdate run --token $CLOUDFLARE_TUNNEL_TOKEN
+
+networks:
+  coolify:
+    name: coolify
+    driver: bridge

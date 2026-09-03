@@ -1,0 +1,50 @@
+services:
+  linkwarden:
+    image: ghcr.io/linkwarden/linkwarden:v2.16.2
+    container_name: linkwarden
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - DATABASE_URL=postgresql://${LINKWARDEN_DB_USER:?LINKWARDEN_DB_USER must be set}:${LINKWARDEN_DB_PASSWORD:?LINKWARDEN_DB_PASSWORD must be set}@127.0.0.1:5432/${LINKWARDEN_DB_NAME:?LINKWARDEN_DB_NAME must be set}
+      - NEXTAUTH_SECRET=${LINKWARDEN_NEXTAUTH_SECRET:?LINKWARDEN_NEXTAUTH_SECRET must be set}
+      - NEXTAUTH_URL=${LINKWARDEN_URL}/api/v1/auth
+      - PORT=3008
+      - TZ=${TZ:-America/New_York}
+      # SSO / OIDC Authentik Integration
+      - NEXT_PUBLIC_AUTHENTIK_ENABLED=true
+      - AUTHENTIK_CLIENT_ID=${LINKWARDEN_OIDC_CLIENT_ID}
+      - AUTHENTIK_CLIENT_SECRET=${LINKWARDEN_OIDC_CLIENT_SECRET}
+      - AUTHENTIK_ISSUER=${LINKWARDEN_OIDC_ISSUER}
+      - AUTHENTIK_CUSTOM_NAME=${LINKWARDEN_OIDC_DISPLAY_NAME:-Authentik}
+      # Security Toggles
+      - NEXT_PUBLIC_CREDENTIALS_ENABLED=${LINKWARDEN_CREDENTIALS_ENABLED:-true}
+      - NEXT_PUBLIC_DISABLE_REGISTRATION=${LINKWARDEN_DISABLE_REGISTRATION:-false}
+    volumes:
+      - ./data:/data/data
+    depends_on:
+      - linkwarden-db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/usr/bin/curl", "--silent", "--fail", "http://127.0.0.1:3008/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  linkwarden-db:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${LINKWARDEN_DB_USER}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: postgres:16-alpine
+    container_name: linkwarden-db
+    labels:
+      - "wud.tag.include=^16(\\.\\d+)*-alpine$"
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - POSTGRES_PASSWORD=${LINKWARDEN_DB_PASSWORD:?LINKWARDEN_DB_PASSWORD must be set}
+      - POSTGRES_USER=${LINKWARDEN_DB_USER:?LINKWARDEN_DB_USER must be set}
+      - POSTGRES_DB=${LINKWARDEN_DB_NAME:?LINKWARDEN_DB_NAME must be set}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    restart: unless-stopped

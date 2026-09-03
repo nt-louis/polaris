@@ -1,0 +1,64 @@
+services:
+  yamtrack:
+    container_name: yamtrack
+    image: ghcr.io/fuzzygrim/yamtrack:0.26.3
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8000"
+    depends_on:
+      - yamtrack-db
+      - yamtrack-redis
+    environment:
+      - TZ=${TZ:-Europe/Berlin}
+      - SECRET=${YAMTRACK_SECRET}
+      - REDIS_URL=redis://yamtrack-redis:6379
+      - DB_HOST=yamtrack-db
+      - DB_NAME=${YAMTRACK_DB_NAME:-yamtrack}
+      - DB_USER=${YAMTRACK_DB_USER:-yamtrack}
+      - DB_PASSWORD=${YAMTRACK_DB_PASSWORD}
+      - DB_PORT=5432
+      - SOCIAL_PROVIDERS=allauth.socialaccount.providers.openid_connect
+      - SOCIALACCOUNT_PROVIDERS=${YAMTRACK_SOCIALACCOUNT_PROVIDERS}
+      - REDIRECT_LOGIN_TO_SSO=True
+      - SOCIALACCOUNT_ONLY=True
+      - ACCOUNT_DEFAULT_HTTP_PROTOCOL=https
+      - ALLOWED_HOSTS=${YAMTRACK_ALLOWED_HOSTS:-yamtrack.example.com,localhost,127.0.0.1}
+      - TRAKT_API=${TRAKT_API}
+      - TRAKT_API_SECRET=${TRAKT_API_SECRET}
+      - SIMKL_ID=${SIMKL_ID}
+      - SIMKL_SECRET=${SIMKL_SECRET}
+      - ANILIST_ID=${ANILIST_ID}
+      - ANILIST_SECRET=${ANILIST_SECRET}
+      - STEAM_API_KEY=${STEAM_API_KEY}
+  yamtrack-db:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: postgres:16-alpine
+    container_name: yamtrack-db
+    labels:
+      - "wud.watch=false"
+    environment:
+      - POSTGRES_DB=${YAMTRACK_DB_NAME:-yamtrack}
+      - POSTGRES_USER=${YAMTRACK_DB_USER:-yamtrack}
+      - POSTGRES_PASSWORD=${YAMTRACK_DB_PASSWORD}
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  yamtrack-redis:
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    container_name: yamtrack-redis
+    image: redis:8-alpine
+    restart: unless-stopped
+    volumes:
+      - yamtrack_redis_data:/data
+
+volumes:
+  yamtrack_redis_data:

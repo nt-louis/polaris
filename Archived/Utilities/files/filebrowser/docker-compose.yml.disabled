@@ -1,0 +1,19 @@
+services:
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    network_mode: "container:utilities-gateway-gluetun"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${GUID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - /docker:/srv/docker
+      - ${REPO_PATH:-./../../}:/srv/net-stream
+      - /mnt/media:/srv/media:rslave
+      - ./filebrowser/database:/database
+      - ./filebrowser/config:/config
+    command: ["--port", "8089"]
+    healthcheck:
+      disable: true
+    restart: unless-stopped

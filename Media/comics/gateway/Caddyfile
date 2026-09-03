@@ -1,0 +1,16 @@
+{$TAILNET_FQDN} {
+    tls {
+        get_certificate tailscale
+    }
+    redir /kavita /kavita/
+    handle_path /kavita/* {
+        reverse_proxy 127.0.0.1:5000
+    }
+
+    redir /grimmory /grimmory/
+    handle_path /grimmory/* {
+	reverse_proxy 127.0.0.1:6060
+    }
+
+    respond "Comics gateway is running." 200
+}
