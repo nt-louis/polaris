@@ -36,8 +36,8 @@ class TestDopplerClient(unittest.TestCase):
         self.assertEqual(get_short_category_slug("Media/stremio", "Media/stremio/addons/aiostreams"), "stremio")
 
     def test_get_doppler_project(self):
-        self.assertEqual(get_doppler_project("A"), "net-stream-vps-a")
-        self.assertEqual(get_doppler_project("B"), "net-stream-vps-b")
+        self.assertEqual(get_doppler_project("A"), "polaris-vps-a")
+        self.assertEqual(get_doppler_project("B"), "polaris-vps-b")
 
     def test_get_doppler_config(self):
         self.assertEqual(
@@ -60,7 +60,7 @@ class TestDopplerClient(unittest.TestCase):
         cmd = self.client.wrap_command(["docker", "compose", "up", "-d"], service=service)
         self.assertEqual(
             cmd,
-            ["doppler", "run", "--project", "net-stream-vps-a", "--config", "auth_pocketid", "--", "docker", "compose", "up", "-d"],
+            ["doppler", "run", "--project", "polaris-vps-a", "--config", "auth_pocketid", "--", "docker", "compose", "up", "-d"],
         )
 
 

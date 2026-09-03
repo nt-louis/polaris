@@ -1,6 +1,6 @@
 # Debrid-Backed Media Libraries (Zurg & Rclone, Disabled Reference)
 
-This guide explains how to set up and configure **Zurg** and **Rclone** in your Net-Stream stack to mount your entire Real-Debrid library as a virtual local directory on your VPS host. This enables both **Jellyfin** and **Emby** to index and stream 4K cached torrents instantly with **zero host disk space usage**.
+This guide explains how to set up and configure **Zurg** and **Rclone** in your Polaris stack to mount your entire Real-Debrid library as a virtual local directory on your VPS host. This enables both **Jellyfin** and **Emby** to index and stream 4K cached torrents instantly with **zero host disk space usage**.
 
 > [!WARNING]
 > `Media/zurg` is excluded from active compose discovery and currently has no

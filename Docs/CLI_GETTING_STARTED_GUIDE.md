@@ -1,6 +1,6 @@
-# Net-Stream CLI & TUI Getting Started Guide
+# Polaris CLI & TUI Getting Started Guide
 
-Comprehensive operator and developer guide for the unified Net-Stream orchestration engine (`./manage.py` and the `net-stream` system-wide CLI wrapper).
+Comprehensive operator and developer guide for the unified Polaris orchestration engine (`./manage.py` and the `polaris` system-wide CLI wrapper).
 
 ---
 
@@ -35,11 +35,11 @@ Comprehensive operator and developer guide for the unified Net-Stream orchestrat
 
 ## Overview
 
-Net-Stream includes a unified Python orchestration engine that automates container lifecycle operations, secret injection, dependency resolution, backup/restore, and network configuration.
+Polaris includes a unified Python orchestration engine that automates container lifecycle operations, secret injection, dependency resolution, backup/restore, and network configuration.
 
 Key capabilities:
 - **Dual Execution Interfaces**: An interactive Text User Interface (TUI) dashboard for visual management and a robust Command-Line Interface (CLI) for scripts, CI/CD, and power users.
-- **Dynamic Repository Discovery**: Run `net-stream` from any directory on the host machine without needing to switch back to the repository root.
+- **Dynamic Repository Discovery**: Run `polaris` from any directory on the host machine without needing to switch back to the repository root.
 - **Zero-Secret Disk Exposure**: Process-level Doppler secret injection with automated transient `.env` materialization and cleanup.
 - **Topological Dependency Ordering**: Automatic graph sequencing ensuring gateways and network sidecars start before dependent services.
 - **Dual-Node Awareness**: Isolated configuration contexts for VPS A and VPS B with automatic node targeting.
@@ -73,7 +73,7 @@ Alternatively, install through `manage.py`:
 ./manage.py cli install
 ```
 
-This creates a symlink pointing to the launcher wrapper at `~/.local/bin/net-stream`.
+This creates a symlink pointing to the launcher wrapper at `~/.local/bin/polaris`.
 
 ### 2. Verify PATH Configuration
 
@@ -100,27 +100,27 @@ source ~/.bashrc
 Verify the installation status from any directory:
 
 ```bash
-net-stream cli verify
+polaris cli verify
 ```
 
 Expected output:
 ```text
-net-stream CLI is properly installed and active at /home/ubuntu/.local/bin/net-stream
+polaris CLI is properly installed and active at /home/ubuntu/.local/bin/polaris
 ```
 
-You can now run `net-stream` anywhere on the system (e.g. from `/home/ubuntu`, `Media/jellyfin`, or `/tmp`).
+You can now run `polaris` anywhere on the system (e.g. from `/home/ubuntu`, `Media/jellyfin`, or `/tmp`).
 
 ### Managing and Updating the CLI
 
 - **Check CLI Status**:
   ```bash
-  net-stream cli status
+  polaris cli status
   ```
 - **Uninstall the Wrapper**:
   ```bash
-  net-stream cli uninstall
+  polaris cli uninstall
   ```
-- **Updating**: Since `~/.local/bin/net-stream` is a symbolic link to the repository launcher, running `git pull` in your repository instantly updates the CLI across your system with zero reinstallation required.
+- **Updating**: Since `~/.local/bin/polaris` is a symbolic link to the repository launcher, running `git pull` in your repository instantly updates the CLI across your system with zero reinstallation required.
 
 ---
 
@@ -128,10 +128,10 @@ You can now run `net-stream` anywhere on the system (e.g. from `/home/ubuntu`, `
 
 ### Launching the Dashboard
 
-Run `net-stream` or `./manage.py` with no arguments to launch the full-screen terminal dashboard:
+Run `polaris` or `./manage.py` with no arguments to launch the full-screen terminal dashboard:
 
 ```bash
-net-stream
+polaris
 ```
 
 ### Navigation and Shortcuts
@@ -197,35 +197,35 @@ Inspect real-time container health, network bindings, and ports:
 
 ```bash
 # View active containers on current host node
-net-stream status
+polaris status
 
 # Explicitly inspect VPS A, VPS B, or all nodes
-net-stream status --vps A
-net-stream status --vps B
-net-stream status --vps all
+polaris status --vps A
+polaris status --vps B
+polaris status --vps all
 
 # Search services by project name, container, or network port
-net-stream status --search jellyfin
-net-stream status -q paperless
+polaris status --search jellyfin
+polaris status -q paperless
 
 # Filter by container health/lifecycle state
-net-stream status --state healthy
-net-stream status --state running
-net-stream status --state stopped
+polaris status --state healthy
+polaris status --state running
+polaris status --state stopped
 
 # Filter by category name
-net-stream status --category Utilities
-net-stream status -c Media
+polaris status --category Utilities
+polaris status -c Media
 
 # Machine-readable JSON output for monitoring scripts
-net-stream status --json
+polaris status --json
 
 # Pre-flight infrastructure diagnostics (Doppler, VPN namespaces, Tailscale, Disk)
-net-stream doctor
+polaris doctor
 
 # Stream live container logs by short service name
-net-stream logs jellyfin -f --tail=100
-net-stream logs sonarr
+polaris logs jellyfin -f --tail=100
+polaris logs sonarr
 ```
 
 ### Deploy, Redeploy, and Stop
@@ -234,34 +234,34 @@ Deploy, restart, or stop workloads with dependency ordering:
 
 ```bash
 # Interactive deployment selector
-net-stream deploy
+polaris deploy
 
 # Deploy specific services by short name, project name, or directory path
-net-stream deploy jellyfin sonarr bazarr
-net-stream deploy Utilities/auth/pocketid
+polaris deploy jellyfin sonarr bazarr
+polaris deploy Utilities/auth/pocketid
 
 # Deploy last saved selection directly without prompts
-net-stream deploy --last
+polaris deploy --last
 
 # Deploy with dry-run simulation (verifies configuration with zero restarts)
-net-stream deploy --dry-run
+polaris deploy --dry-run
 
 # Force recreation of network gateway sidecars
-net-stream deploy --force-gateways
+polaris deploy --force-gateways
 
 # Redeploy active containers with image builds
-net-stream redeploy --build
+polaris redeploy --build
 
 # Recreate running containers
-net-stream redeploy --recreate
+polaris redeploy --recreate
 
 # Gracefully stop containers
-net-stream stop jellyfin
-net-stream stop --vps B
+polaris stop jellyfin
+polaris stop --vps B
 ```
 
 > [!TIP]
-> **Headless Execution (`--yes` / `-y`)**: Add `-y` to bypass confirmation gates in automation scripts and CI pipelines (e.g. `net-stream stop --vps B -y`).
+> **Headless Execution (`--yes` / `-y`)**: Add `-y` to bypass confirmation gates in automation scripts and CI pipelines (e.g. `polaris stop --vps B -y`).
 
 ### Container Updates & Rollback
 
@@ -269,16 +269,16 @@ Perform safe, transactional container updates with automated backups and image r
 
 ```bash
 # Check for available image updates without modifying containers
-net-stream update --check
+polaris update --check
 
 # Dry-run update evaluation with 2-day stability age-gate
-net-stream update --dry-run --min-age 2
+polaris update --dry-run --min-age 2
 
 # Apply updates with 7-day image backup retention
-net-stream update --min-age 1 --backup-days 7 --yes
+polaris update --min-age 1 --backup-days 7 --yes
 
 # List currently backed-up images available for rollback
-net-stream update --list-backups
+polaris update --list-backups
 ```
 
 ### Validation and Audit History
@@ -287,14 +287,14 @@ Ensure repository and container configurations are error-free:
 
 ```bash
 # Validate Docker Compose syntax, Caddyfiles, and manifest sync
-net-stream validate
+polaris validate
 
 # Automatically register untracked compose projects into the manifest
-net-stream validate --fix
+polaris validate --fix
 
 # View audit history of past CLI operations
-net-stream history
-net-stream history --json
+polaris history
+polaris history --json
 ```
 
 ### Secrets Management (Doppler & SOPS)
@@ -303,20 +303,20 @@ Manage centralized runtime secrets and encrypted offline backups:
 
 ```bash
 # Verify Doppler CLI authentication
-net-stream secrets verify
+polaris secrets verify
 
 # Open the Doppler web management dashboard
-net-stream secrets open
+polaris secrets open
 
 # Create encrypted SOPS/age offline fallback snapshots
-net-stream secrets snapshot
-net-stream secrets snapshot --vps B
+polaris secrets snapshot
+polaris secrets snapshot --vps B
 
 # List offline snapshot inventory
-net-stream secrets snapshots
+polaris secrets snapshots
 
 # Synchronize snapshots to dedicated git branch via worktree
-net-stream secrets sync-branch
+polaris secrets sync-branch
 ```
 
 ### Automated Backups & Disaster Recovery
@@ -325,26 +325,26 @@ Manage Restic encrypted volume backups:
 
 ```bash
 # Run immediate volume backup snapshot
-net-stream backup run
-net-stream backup run --vps B
+polaris backup run
+polaris backup run --vps B
 
 # List backup snapshots
-net-stream backup snapshots
+polaris backup snapshots
 
 # Inspect repository storage statistics and compression
-net-stream backup stats --mode raw-data
+polaris backup stats --mode raw-data
 
 # Enforce retention policy and prune unused repository data
-net-stream backup prune --max-unused 10%
+polaris backup prune --max-unused 10%
 
 # Test repository integrity
-net-stream backup check
+polaris backup check
 
 # Interactive disaster recovery restoration
-net-stream backup restore
+polaris backup restore
 
 # Restore specific snapshot non-interactively
-net-stream backup restore --snapshot <snapshot_id> --yes
+polaris backup restore --snapshot <snapshot_id> --yes
 ```
 
 ### Network Repairs
@@ -353,10 +353,10 @@ Diagnose and repair network sidecars and routing:
 
 ```bash
 # Automatically diagnose and repair Tailscale MagicDNS and gateway state
-net-stream network fix
+polaris network fix
 
 # Reset network routing interfaces
-net-stream network reset
+polaris network reset
 ```
 
 ### Git Hooks Guard
@@ -365,17 +365,17 @@ Protect against accidental secret and state file commits:
 
 ```bash
 # Install the pre-commit secret/state guard
-net-stream hooks install
+polaris hooks install
 
 # Verify pre-commit hook installation
-net-stream hooks verify
+polaris hooks verify
 ```
 
 ---
 
 ## Multi-Node Context (VPS A vs VPS B)
 
-Net-Stream operates across dual VPS targets:
+Polaris operates across dual VPS targets:
 - **Active Node Tracking**: The CLI tracks your active context in `.active_vps` (e.g. `A` or `B`).
 - **Global Flag Override**: Pass `--vps A` or `--vps B` on any command to target a specific node without switching your persistent context.
 - **GitOps Integration**: In automated CI/CD (`deploy.yml`), the deployment runner on VPS A only deploys services assigned to Node A, while the runner on VPS B only deploys services assigned to Node B. If a commit modifies services on the other node, the runner skips cleanly and logs an informative notice.
@@ -384,21 +384,21 @@ Net-Stream operates across dual VPS targets:
 
 ## Troubleshooting & FAQs
 
-### `Error: Could not locate net-stream repository root`
+### `Error: Could not locate polaris repository root`
 - **Cause**: The launcher could not find `manage.py` and `orchestrator/` in the current directory or parent paths.
 - **Solution**: Set the `NET_STREAM_ROOT` environment variable in your shell profile:
   ```bash
   export NET_STREAM_ROOT="~/polaris"
   ```
 
-### `net-stream: command not found`
+### `polaris: command not found`
 - **Cause**: `~/.local/bin` is missing from your `$PATH`.
 - **Solution**: Add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc` and run `source ~/.bashrc`.
 
 ### `Doppler Error: Unable to authenticate`
 - **Cause**: Doppler service token or CLI session expired.
-- **Solution**: Run `doppler login` followed by `net-stream secrets verify`.
+- **Solution**: Run `doppler login` followed by `polaris secrets verify`.
 
 ### `Service 'X' is assigned to VPS A, but active filter is VPS B`
 - **Cause**: You requested a service on Node B that is configured for Node A in `manifest.yaml`.
-- **Solution**: Use the correct node filter (e.g. `net-stream deploy X --vps A`) or update node assignment in `orchestrator/registry/manifest.yaml` if migrating workloads.
+- **Solution**: Use the correct node filter (e.g. `polaris deploy X --vps A`) or update node assignment in `orchestrator/registry/manifest.yaml` if migrating workloads.

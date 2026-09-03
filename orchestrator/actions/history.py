@@ -55,7 +55,7 @@ class HistoryAction(BaseAction):
         if HAS_RICH:
             console = Console()
             table = Table(
-                title="Net-Stream Persistent Operations & Action Audit History",
+                title="Polaris Persistent Operations & Action Audit History",
                 header_style="bold #38bdf8",
                 border_style="#d97706",
             )

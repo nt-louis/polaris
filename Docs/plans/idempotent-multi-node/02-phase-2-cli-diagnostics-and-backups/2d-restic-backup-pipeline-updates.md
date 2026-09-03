@@ -39,7 +39,7 @@ placements:
 The backup command receives resolved paths as an argument vector rather than building
 a shell command from a service name:
 ```bash
-restic backup --json /srv/net-stream/Media/local-media/players/jellyfin/config \
+restic backup --json /srv/polaris/Media/local-media/players/jellyfin/config \
   --tag "service:jellyfin" \
   --tag "cluster:media-core" \
   --tag "host:vps-a"

@@ -32,4 +32,4 @@
 
 # Example 4: Ephemeral Docker & Temp Directory Pruning
 # Remove stale temp files older than 7 days before Restic scans:
-# find /tmp -maxdepth 1 -name "net-stream-*" -mtime +7 -exec rm -f {} +
+# find /tmp -maxdepth 1 -name "polaris-*" -mtime +7 -exec rm -f {} +

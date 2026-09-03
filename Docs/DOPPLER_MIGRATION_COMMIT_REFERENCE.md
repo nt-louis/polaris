@@ -40,4 +40,4 @@ git checkout 52d9873 -- .env.vps-a.enc .env.vps-b.enc
 ```
 
 ---
-*Maintained as part of the Net-Stream Doppler Migration Project.*
+*Maintained as part of the Polaris Doppler Migration Project.*

@@ -16,7 +16,7 @@ Refactor [`Scripts/deploy/core/discovery.py`](Scripts/deploy/core/discovery.py) 
 4. Return standardized project dictionaries containing:
    * `name`: Project/Service name
    * `node`: Assigned Node ID (e.g. `vps-a`)
-   * `doppler_project`: Associated Doppler project (e.g. `net-stream-vps-a`)
+   * `doppler_project`: Associated Doppler project (e.g. `polaris-vps-a`)
    * `category`: Formatted human-readable category
    * `abs_dir`: Absolute path to compose directory
    * `rel_dir`: Relative path from repository root

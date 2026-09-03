@@ -24,7 +24,7 @@ Update dashboard header in [`Scripts/deploy/core/tui.py`](Scripts/deploy/core/tu
 def render_header(active_node):
     topology = load_topology()
     node_name = topology.get("nodes", {}).get(active_node, {}).get("name", active_node)
-    title = f"Net-Stream Control Center  •  Node: [{active_node.upper()}] ({node_name})"
+    title = f"Polaris Control Center  •  Node: [{active_node.upper()}] ({node_name})"
     # Renders banner using Rich Panel
 ```
 

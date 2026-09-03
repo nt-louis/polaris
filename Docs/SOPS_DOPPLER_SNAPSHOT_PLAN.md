@@ -25,7 +25,7 @@ resilience against availability failures, not a migration away from Doppler.
 ```
                   ┌──────────────────────────────────────┐
                   │         Doppler SaaS (authoritative)  │
-                  │   net-stream-vps-a / net-stream-vps-b │
+                  │   polaris-vps-a / polaris-vps-b │
                   └──────────────┬───────────────────────┘
                                  │  doppler secrets download
                                  │  (on snapshot command)
@@ -49,7 +49,7 @@ resilience against availability failures, not a migration away from Doppler.
 
 ### 1. `.snapshots/` directory
 
-- Layout: `.snapshots/net-stream-vps-a/<config>.env.enc`, `.snapshots/net-stream-vps-b/<config>.env.enc`
+- Layout: `.snapshots/polaris-vps-a/<config>.env.enc`, `.snapshots/polaris-vps-b/<config>.env.enc`
 - One encrypted file per Doppler config (mirrors the `project/config` namespace exactly)
 - Committed to git — pre-commit hook must cover this directory to block plaintext `.env` files from leaking in
 - `.sops.yaml` restored at repo root with the existing age public key (`age1f8wtud5d8ss9kenyytvzfa0y09kxfxg2zlmw9jv9v7suj6d8w5xskq9672`, recoverable from git history per `Docs/DOPPLER_MIGRATION_COMMIT_REFERENCE.md`)

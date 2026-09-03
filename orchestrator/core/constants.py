@@ -5,14 +5,14 @@ from pathlib import Path
 
 
 def _resolve_repo_root() -> Path:
-    """Resolve the active Net-Stream repository root.
+    """Resolve the active Polaris repository root.
 
     Resolution order:
-    1. NET_STREAM_ROOT environment variable (if pointing to a valid net-stream root).
+    1. NET_STREAM_ROOT environment variable (if pointing to a valid polaris root).
     2. Parent directory traversal from current working directory (looking for manage.py + orchestrator/).
     3. Source-relative location of this file (orchestrator/core/constants.py -> repo root).
     """
-    env_root = os.environ.get("NET_STREAM_ROOT")
+    env_root = os.environ.get("POLARIS_ROOT") or os.environ.get("NET_STREAM_ROOT")
     if env_root:
         p = Path(env_root).resolve()
         if p.is_dir() and (p / "orchestrator").is_dir() and (p / "manage.py").is_file():

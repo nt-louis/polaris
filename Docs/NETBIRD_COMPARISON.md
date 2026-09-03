@@ -1,9 +1,9 @@
 # NetBird vs Tailscale: Comparison & Integration Guide
 
 > [!NOTE]
-> **Status Notice**: Tailscale remains the primary active mesh network for the Net-Stream stack. This document preserves the architectural comparison and side-by-side evaluation conducted with NetBird.
+> **Status Notice**: Tailscale remains the primary active mesh network for the Polaris stack. This document preserves the architectural comparison and side-by-side evaluation conducted with NetBird.
 
-This guide compares **NetBird** and **Tailscale** in the context of the Net-Stream stack and provides instructions for running them side-by-side in the `exit-node` gateway stack for testing.
+This guide compares **NetBird** and **Tailscale** in the context of the Polaris stack and provides instructions for running them side-by-side in the `exit-node` gateway stack for testing.
 
 ---
 

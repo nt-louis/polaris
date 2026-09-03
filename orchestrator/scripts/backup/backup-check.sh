@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Backup Integrity Check (Restic)
+# Polaris Backup Integrity Check (Restic)
 # ==============================================================================
 # Verifies the integrity of the Restic backup repository for this VPS.
 # ==============================================================================

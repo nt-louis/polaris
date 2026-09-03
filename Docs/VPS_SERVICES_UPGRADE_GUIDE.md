@@ -1,4 +1,4 @@
-# Net-Stream VPS A & B Service Intricacies & Upgrades Guide
+# Polaris VPS A & B Service Intricacies & Upgrades Guide
 
 This document serves as the master reference guide for managing, maintaining, and upgrading containerized services deployed across **VPS A** and **VPS B**. Both servers pull from the same repository branch but run different workloads based on their hardware, network context, and resource footprints.
 

@@ -13,7 +13,7 @@ class TestBackupAction(unittest.TestCase):
     def test_build_backup_command_forwards_vps(self):
         cmd = build_backup_command("/path/to/script.sh", ["--arg1"], vps="B")
         self.assertIn("doppler", cmd)
-        self.assertIn("net-stream-vps-b", cmd)
+        self.assertIn("polaris-vps-b", cmd)
         self.assertIn("--vps", cmd)
         self.assertIn("B", cmd)
         self.assertIn("/path/to/script.sh", cmd)

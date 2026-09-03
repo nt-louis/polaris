@@ -61,7 +61,7 @@ def verify_branch_guard(
         return None
 
     # Check if explicit override is active (CLI flag or environment variable)
-    allow_dev = context.allow_dev or os.environ.get("NET_STREAM_ALLOW_DEV", "").strip().lower() in ("1", "true", "yes")
+    allow_dev = context.allow_dev or os.environ.get("POLARIS_ALLOW_DEV") or os.environ.get("NET_STREAM_ALLOW_DEV", "").strip().lower() in ("1", "true", "yes")
 
     # In automated test suite runners, allow execution unless test explicitly tests the guard
     if is_test_environment() and not force_check and not allow_dev:
@@ -89,7 +89,7 @@ def verify_branch_guard(
         f"[BLOCK] Mutating operation '{action_name}' is restricted to the 'main' branch to prevent accidental outages.\n"
         f"        Current branch: '{branch}'.\n"
         f"        - To preview safely: pass --dry-run / -n\n"
-        f"        - To test on development branch: pass --allow-dev (or set NET_STREAM_ALLOW_DEV=1)"
+        f"        - To test on development branch: pass --allow-dev (or set POLARIS_ALLOW_DEV=1)"
     )
     logger.error("%s", msg)
     return ExecutionResult(

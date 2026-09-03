@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# install-cli.sh — Install net-stream CLI wrapper to user or system bin
+# install-cli.sh — Install polaris CLI wrapper to user or system bin
 # ==============================================================================
 set -e
 
 # Resolve repository root
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WRAPPER_SRC="$REPO_ROOT/orchestrator/scripts/cli/net-stream"
+WRAPPER_SRC="$REPO_ROOT/orchestrator/scripts/cli/polaris"
 
 # Default install target directory
 PREFIX="${1:-$HOME/.local/bin}"
 TARGET="$PREFIX/polaris"
 TARGET_COMPAT="$PREFIX/net-stream"
 
-echo "[cli] Installing net-stream CLI wrapper..."
+echo "[cli] Installing polaris CLI wrapper..."
 echo "[cli] Source: $WRAPPER_SRC"
 echo "[cli] Target: $TARGET"
 

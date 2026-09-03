@@ -78,7 +78,7 @@ class TestSnapshotManager(unittest.TestCase):
     def test_is_snapshot_available(self, mock_run):
         sm = SnapshotManager()
         # Test availability check against .snapshots path
-        self.assertFalse(sm.is_snapshot_available("net-stream-vps-a", "nonexistent_cfg"))
+        self.assertFalse(sm.is_snapshot_available("polaris-vps-a", "nonexistent_cfg"))
 
     @patch("subprocess.run")
     def test_restore_env_from_snapshot_in_memory(self, mock_run):
@@ -89,7 +89,7 @@ class TestSnapshotManager(unittest.TestCase):
         
         sm = SnapshotManager()
         with patch("os.path.exists", return_value=True):
-            env_dict = sm.restore_env_from_snapshot("net-stream-vps-a", "test_cfg")
+            env_dict = sm.restore_env_from_snapshot("polaris-vps-a", "test_cfg")
             self.assertEqual(env_dict, {"FOO": "bar", "BAZ": "qux"})
 ```
 
@@ -207,7 +207,7 @@ git commit -m "feat(cli): add secrets snapshot subcommands and TUI actions"
 - Modify: `Scripts/utils/hooks/pre-commit`
 - Modify: `Docs/DOPPLER_OPERATIONS_GUIDE.md`
 - Modify: `AGENTS.md`
-- Create: `.snapshots/net-stream-vps-a/*.env.enc` & `.snapshots/net-stream-vps-b/*.env.enc`
+- Create: `.snapshots/polaris-vps-a/*.env.enc` & `.snapshots/polaris-vps-b/*.env.enc`
 
 **Step 1: Update Pre-Commit Hook**
 - Ensure `Scripts/utils/hooks/pre-commit` allows `.snapshots/**/*.env.enc` while blocking any unencrypted files under `.snapshots/`.

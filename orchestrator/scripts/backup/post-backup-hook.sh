@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Automated Post-Backup Hook
+# Polaris Automated Post-Backup Hook
 # ==============================================================================
 # Executes immediately after Restic completes snapshots and containers are
 # confirmed running.

@@ -2,7 +2,7 @@
 
 A self-hosted server is only as strong as its backup strategy. While your media downloads reside safely on third-party cloud systems (via Real-Debrid and Zurg), all your stack's custom settings, databases, watch progress, and automation configurations reside on your host VPSes.
 
-This guide details the architecture of the **Net-Stream Restic-Based Universal Backup & Recovery System**, explaining how to set up repository secrets, configure off-site cloud remotes, run manual backups, schedule automatic nightly runs, browse snapshots, perform granular restores, and execute total disaster recovery.
+This guide details the architecture of the **Polaris Restic-Based Universal Backup & Recovery System**, explaining how to set up repository secrets, configure off-site cloud remotes, run manual backups, schedule automatic nightly runs, browse snapshots, perform granular restores, and execute total disaster recovery.
 
 ---
 
@@ -45,14 +45,14 @@ part of the active backup deployment profile.
 
 
 The backup system auto-detects the active node by reading `.active_vps` (or using `--vps A|B`) and automatically namespaces the Restic repository path on the cloud remote:
-- `rclone:gdrive:backups/net-stream/vps-a`
-- `rclone:gdrive:backups/net-stream/vps-b`
+- `rclone:gdrive:backups/polaris/vps-a`
+- `rclone:gdrive:backups/polaris/vps-b`
 
 ---
 
 ## 1. Initial Configuration & Credentials Setup
 
-Before executing backups or scheduling cron jobs, use the `backup` config in each Doppler project (`net-stream-vps-a` and `net-stream-vps-b`). Add these variables to the corresponding VPS config:
+Before executing backups or scheduling cron jobs, use the `backup` config in each Doppler project (`polaris-vps-a` and `polaris-vps-b`). Add these variables to the corresponding VPS config:
 
 - `BACKUP_PASSWORD` — required Restic repository password.
 - `RCLONE_REMOTE` — required primary repository remote.
@@ -81,10 +81,10 @@ In the active VPS Doppler `backup` config, define the repository remote:
 
 ```env
 # Primary Cloud Target
-RCLONE_REMOTE="gdrive:backups/net-stream"
+RCLONE_REMOTE="gdrive:backups/polaris"
 
 # Optional: Secondary Replication Remote
-RCLONE_REMOTE_SECONDARY="hetzner:backups/net-stream"
+RCLONE_REMOTE_SECONDARY="hetzner:backups/polaris"
 
 ```
 

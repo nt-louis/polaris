@@ -41,7 +41,7 @@ def get_log_stream_mode(
     """
     import sys
 
-    env_mode = os.environ.get("NET_STREAM_LOG_MODE", "").strip().lower()
+    env_mode = os.environ.get("POLARIS_LOG_MODE") or os.environ.get("NET_STREAM_LOG_MODE", "").strip().lower()
     if env_mode in ("native", "piped"):
         return env_mode
 
@@ -105,7 +105,7 @@ def get_active_vps(default: Optional[str] = None) -> str:
 
     Validates all candidate node IDs against the declarative registry.
     """
-    env_vps = os.environ.get("NET_STREAM_VPS", "").strip().upper()
+    env_vps = os.environ.get("POLARIS_VPS") or os.environ.get("NET_STREAM_VPS", "").strip().upper()
     if env_vps:
         node = get_node(env_vps)
         if node:

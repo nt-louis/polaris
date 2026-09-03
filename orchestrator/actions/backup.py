@@ -45,7 +45,7 @@ def build_backup_command(
     force_prefetch: bool = False,
 ) -> list[str]:
     """Run a backup script with secrets injected by the active VPS Doppler config."""
-    project = f"net-stream-vps-{vps.lower()}"
+    project = f"polaris-vps-{vps.lower()}"
 
     # Ensure --vps is explicitly passed to backup scripts so they target the resolved node
     fwd_args = list(args)

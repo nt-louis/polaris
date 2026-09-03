@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary & Vision
 
-Net-Stream is evolving from a rigid, hardcoded dual-VPS model (`VPS A` and `VPS B`) into a **flexible, idempotent multi-node cluster architecture**.
+Polaris is evolving from a rigid, hardcoded dual-VPS model (`VPS A` and `VPS B`) into a **flexible, idempotent multi-node cluster architecture**.
 
 Rather than performing risky physical directory moves, the architecture cleanly separates:
 1. **Logical / Functional Domain Organization on Disk:** Workloads remain organized by domain (`Media/local-media/`, `Media/stremio/`, `Utilities/auth/`, `Network/`).

@@ -201,7 +201,7 @@ class TestHistoryAuditLog(unittest.TestCase):
             }
         ]
         output = format_action_history_text(records)
-        self.assertIn("Net-Stream Persistent Action Audit History", output)
+        self.assertIn("Polaris Persistent Action Audit History", output)
         self.assertIn("DEPLOY", output)
         self.assertIn("VPS A", output)
         self.assertIn("SUCCESS", output)

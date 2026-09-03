@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Idempotently installs git hooks for net-stream. Currently installs:
+# Idempotently installs git hooks for polaris. Currently installs:
 #   - pre-commit  (orchestrator/scripts/hooks/pre-commit) — blocks decrypted secrets
 #     and live state from being committed. See the hook header for the full
 #     rule set.

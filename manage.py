@@ -61,7 +61,7 @@ Maintenance & Utilities:
                    Subcommands: env, fmhy, monochrome, build, netbird-server, dependency-report
   hooks            Install or verify git hooks (pre-commit secret guard)
                    Subcommands: install, verify
-  cli              Install, verify, or uninstall system-wide net-stream CLI wrapper
+  cli              Install, verify, or uninstall system-wide polaris CLI wrapper
                    Subcommands: install, verify, status, uninstall
 
   Global flag: --yes / -y   auto-confirm destructive prompts (e.g. for scripts/CI)
@@ -228,20 +228,20 @@ def main():
     elif cmd == "cli":
         subcmd = args[0] if args else None
         prefix = args[1] if len(args) > 1 else os.path.expanduser("~/.local/bin")
-        target = os.path.join(prefix, "net-stream")
-        wrapper_src = os.path.join(REPO_ROOT, "orchestrator", "scripts", "cli", "net-stream")
+        target = os.path.join(prefix, "polaris")
+        wrapper_src = os.path.join(REPO_ROOT, "orchestrator", "scripts", "cli", "polaris")
 
         if subcmd == "install":
             install_script = os.path.join(REPO_ROOT, "install-cli.sh")
             sys.exit(subprocess.call(["bash", install_script, prefix]))
         elif subcmd in ("verify", "status"):
             if os.path.islink(target) and os.path.realpath(target) == os.path.realpath(wrapper_src):
-                print(f"[cli] net-stream installed (symlink -> {wrapper_src}) at {target}")
+                print(f"[cli] polaris installed (symlink -> {wrapper_src}) at {target}")
                 sys.exit(0)
             if os.path.isfile(target):
-                print(f"[cli] net-stream installed at {target}")
+                print(f"[cli] polaris installed at {target}")
                 sys.exit(0)
-            print(f"[cli] net-stream CLI wrapper NOT installed at {target}. Run: ./install-cli.sh or ./manage.py cli install")
+            print(f"[cli] polaris CLI wrapper NOT installed at {target}. Run: ./install-cli.sh or ./manage.py cli install")
             sys.exit(1)
         elif subcmd == "uninstall":
             if os.path.exists(target) or os.path.islink(target):
@@ -249,7 +249,7 @@ def main():
                 print(f"[cli] Removed {target}")
                 sys.exit(0)
             else:
-                print(f"[cli] net-stream CLI wrapper not found at {target}")
+                print(f"[cli] polaris CLI wrapper not found at {target}")
                 sys.exit(0)
         else:
             print(f"ERROR: Unknown cli subcommand '{subcmd}'. Expected: install, verify, status, uninstall", file=sys.stderr)

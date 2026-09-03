@@ -106,7 +106,7 @@ class TestSecretsAction(unittest.TestCase):
         res = action.execute(ctx)
         self.assertTrue(res.success)
         self.assertEqual(res.exit_code, 0)
-        mock_sm.return_value.snapshot_config.assert_called_once_with("net-stream-vps-a", "auth_authelia")
+        mock_sm.return_value.snapshot_config.assert_called_once_with("polaris-vps-a", "auth_authelia")
 
     def test_secrets_snapshot_config_rejects_vps_all(self):
         action = SecretsAction()
@@ -120,7 +120,7 @@ class TestSecretsAction(unittest.TestCase):
     @patch("orchestrator.secrets.snapshots.SnapshotManager")
     def test_secrets_snapshots_list(self, mock_sm):
         mock_sm.return_value.list_snapshots.return_value = [
-            {"project": "net-stream-vps-a", "config": "auth_authelia", "size": 1024, "timestamp": "2026-08-15"}
+            {"project": "polaris-vps-a", "config": "auth_authelia", "size": 1024, "timestamp": "2026-08-15"}
         ]
         action = SecretsAction()
         ctx = ActionContext(targets=["snapshots"])

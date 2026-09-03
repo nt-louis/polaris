@@ -21,7 +21,7 @@ placement from a directory named after a node.
 
 ```yaml
 version: "1.0"
-cluster_name: "net-stream"
+cluster_name: "polaris"
 default_node: "vps-a"
 
 repository:
@@ -32,22 +32,22 @@ nodes:
   vps-a:
     name: "Primary Ingress & Core Media Node"
     description: "Core media server, ingress gateway, authentication, and personal cloud"
-    doppler_project: "net-stream-vps-a"
+    doppler_project: "polaris-vps-a"
     aliases: ["vps-a"]
     tailscale_fqdn: "vps-a.<tailnet-suffix>"
     tags: [core, ingress, media, storage, auth]
     backup:
-      repository: "rclone:gdrive:backups/net-stream/vps-a"
+      repository: "rclone:gdrive:backups/polaris/vps-a"
 
   vps-b:
     name: "Stremio Addons & Secondary Utilities Node"
     description: "Stremio scrapers, debrid caching, download helpers, and secondary developer tools"
-    doppler_project: "net-stream-vps-b"
+    doppler_project: "polaris-vps-b"
     aliases: ["vps-b"]
     tailscale_fqdn: "vps-b.<tailnet-suffix>"
     tags: [stremio, scrapers, compute, ai]
     backup:
-      repository: "rclone:gdrive:backups/net-stream/vps-b"
+      repository: "rclone:gdrive:backups/polaris/vps-b"
 
 # Each entry is one real shared network namespace. `owner` resolves an
 # intra-project `service:` reference; `container_name` resolves cross-project

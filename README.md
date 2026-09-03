@@ -73,7 +73,7 @@ For detailed network routing specifications, refer to [Docs/NETWORK_ARCHITECTURE
 
 ## Prerequisites
 
-Before deploying Net-Stream, verify that the host machine satisfies the following operational requirements:
+Before deploying Polaris, verify that the host machine satisfies the following operational requirements:
 
 - **Linux Kernel & Network Utilities**: `wireguard`, `iptables`, and `ip6tables` enabled.
 - **Tailscale**: Tailscale daemon installed and active on the host machine.
@@ -94,8 +94,8 @@ stored in Doppler; `.env.example` files document required variable names and
 are not production secret stores.
 
 ```bash
-git clone https://github.com/nt-louis/net-stream.git
-cd net-stream
+git clone https://github.com/nt-louis/polaris.git
+cd polaris
 doppler --version
 doppler login
 ./manage.py secrets verify
@@ -107,11 +107,11 @@ or populate the matching VPS project/configs as described in
 
 ### 2. Install System-Wide CLI Wrapper (Optional but Recommended)
 
-Install the `net-stream` CLI wrapper to run management commands from any working directory on the host:
+Install the `polaris` CLI wrapper to run management commands from any working directory on the host:
 
 ```bash
 ./install-cli.sh
-net-stream cli verify
+polaris cli verify
 ```
 
 See [Docs/CLI_GETTING_STARTED_GUIDE.md](Docs/CLI_GETTING_STARTED_GUIDE.md) for the complete setup guide and command reference.
@@ -127,7 +127,7 @@ In the [Tailscale Admin Console -> DNS](https://login.tailscale.com/admin/dns), 
 Launch the interactive stack management interface:
 
 ```bash
-net-stream deploy    # or ./manage.py deploy
+polaris deploy    # or ./manage.py deploy
 ```
 
 For local linting and tests, install the development dependencies:
@@ -138,15 +138,15 @@ python3 -m pip install -r requirements-dev.txt
 
 Select the desired service gateways to build, configure, and start the containers.
 
-The manager selects `net-stream-vps-a` or `net-stream-vps-b` from the VPS
+The manager selects `polaris-vps-a` or `polaris-vps-b` from the VPS
 context, injects values with `doppler run`, and cleans up any transient
 `.env` files required by compose `env_file` declarations. Do not run direct
 `docker compose` commands for production deployment.
 
 ## Secrets and Environment
 
-Net-Stream utilizes a layered secrets architecture:
-1. **Primary Write Surface & Runtime Injection (Doppler SaaS)**: One project per VPS (`net-stream-vps-a` and `net-stream-vps-b`) with configs mapped to compose stacks. Secrets are injected at runtime via process memory with zero plaintext disk exposure.
+Polaris utilizes a layered secrets architecture:
+1. **Primary Write Surface & Runtime Injection (Doppler SaaS)**: One project per VPS (`polaris-vps-a` and `polaris-vps-b`) with configs mapped to compose stacks. Secrets are injected at runtime via process memory with zero plaintext disk exposure.
 2. **Offline Resilience & Cold Backup (SOPS + age Encrypted Snapshots)**: Committed ciphertext snapshots under `.snapshots/<project>/<config>.env.enc` encrypted with `age`. If Doppler is unreachable or during disaster recovery, the CLI automatically and transparently decrypts the snapshots in-memory using your private key (`keys.txt`).
 
 Refer to [Docs/DOPPLER_OPERATIONS_GUIDE.md](Docs/DOPPLER_OPERATIONS_GUIDE.md) for configuration rules, rotation workflows, snapshot management (`./manage.py secrets snapshot`), and automated branch synchronization (`./manage.py secrets sync-branch`).
@@ -246,7 +246,7 @@ The repository includes `manage.py`, a Python management tool providing interact
 | `./manage.py network` | Repair Tailscale/gateway network routing or reset interface state (`fix`, `reset`). |
 | `./manage.py utils` | Repository setup and custom build utilities (`env`, `fmhy`, `monochrome`, `build`, `netbird-server`, `dependency-report`). |
 | `./manage.py hooks` | Installs or verifies git pre-commit hooks (`install`, `verify`) for secret protection. |
-| `./manage.py cli` | Installs, verifies, or uninstalls the system-wide `net-stream` CLI wrapper (`install`, `verify`, `status`, `uninstall`, or `./install-cli.sh`). |
+| `./manage.py cli` | Installs, verifies, or uninstalls the system-wide `polaris` CLI wrapper (`install`, `verify`, `status`, `uninstall`, or `./install-cli.sh`). |
 
 > [!NOTE]
 > **Global `--yes` / `-y` Flag**: The flag auto-confirms destructive confirmation gates and applicable deploy/update prompts (e.g. `./manage.py stop --yes` or `./manage.py redeploy --build --yes`). Read-only commands such as `status`, `logs`, `doctor`, `validate`, and `secrets` do not need it.

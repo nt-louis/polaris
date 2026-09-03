@@ -33,13 +33,13 @@ renovate.json          # Dependency automation config
 - **Intra-Gateway Localhost Rule:** Services in the **same gateway** share network namespace and MUST talk to each other via `127.0.0.1:<port>`, NOT container DNS names. Avoid `http://jellyfin:8096` between services in the same cluster.
 - **Port Collision Prevention:** Because services in the same gateway share `127.0.0.1`, internal container ports inside a gateway namespace MUST be unique. Always audit existing `docker-compose.yml` files in that gateway directory before assigning ports.
 - **Inter-Gateway & External Access:** Traffic *between* different gateways or across VPS targets must route via Tailscale MagicDNS (`https://<gateway>.<tailnet>.ts.net`) or host interfaces fronted by host Caddy reverse-proxies / Cloudflare Tunnels, NOT `127.0.0.1`.
-- **Dual VPS Context:** Deployments target VPS 'A' or 'B'. Active VPS context is tracked in `.active_vps`. VPS-specific environment configurations live in Doppler projects `net-stream-vps-a` and `net-stream-vps-b`.
+- **Dual VPS Context:** Deployments target VPS 'A' or 'B'. Active VPS context is tracked in `.active_vps`. VPS-specific environment configurations live in Doppler projects `polaris-vps-a` and `polaris-vps-b`.
 - **Hosting Reference Docs:** `Docs/CLI_GETTING_STARTED_GUIDE.md`, `Docs/NETWORK_ARCHITECTURE.md`, `Docs/TAILSCALE_URLS.md`, `Docs/CLOUDFLARE_TUNNEL.md`, and `Docs/DOPPLER_OPERATIONS_GUIDE.md`.
 
 ## Secrets & State Intricacies
 
 - **Doppler SaaS Secret Management Workflow:**
-  1. Secrets are managed centrally in Doppler SaaS (`net-stream-vps-a` and `net-stream-vps-b`).
+  1. Secrets are managed centrally in Doppler SaaS (`polaris-vps-a` and `polaris-vps-b`).
   2. To verify Doppler authentication: run `./manage.py secrets verify`.
    3. Secrets are injected at runtime via `doppler run`. Compose `environment` entries receive process variables, while services that declare `env_file` receive a temporary `0600` `.env` which is removed after the command.
   4. Never paste secret values into code/PRs or commit unencrypted secrets.
@@ -86,12 +86,12 @@ renovate.json          # Dependency automation config
 ./manage.py network fix           # Repair Tailscale/gateway network state
 ./manage.py hooks install         # Install the pre-commit secret/state guard (run once per clone)
 ./manage.py hooks verify         # Check the pre-commit hook is installed
-./manage.py cli install           # Install system-wide 'net-stream' CLI wrapper (or ./install-cli.sh)
-./manage.py cli verify            # Verify 'net-stream' CLI wrapper installation status
+./manage.py cli install           # Install system-wide 'polaris' CLI wrapper (or ./install-cli.sh)
+./manage.py cli verify            # Verify 'polaris' CLI wrapper installation status
 # Global flag on all mutating subcommands: --yes / -y auto-confirm destructive prompts (scripts/CI)
 ```
 
-Execute `./manage.py` from the repository root or run `net-stream` from any directory on the host once installed via `./install-cli.sh`. Prefer CLI commands over raw `docker compose` calls to maintain active VPS and gateway state.
+Execute `./manage.py` from the repository root or run `polaris` from any directory on the host once installed via `./install-cli.sh`. Prefer CLI commands over raw `docker compose` calls to maintain active VPS and gateway state.
 
 ## Defense-in-depth: hooks & extensions
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Universal Backup Script (Restic-based)
+# Polaris Universal Backup Script (Restic-based)
 # ==============================================================================
-# Backs up the entire net-stream self-hosted stack using Restic:
+# Backs up the entire polaris self-hosted stack using Restic:
 #   Phase 1: System configurations (--tag configs)
 #   Phase 2: Application data & databases (--tag appdata)
 #   Phase 3: Local Docker images (--tag docker-images)
@@ -48,7 +48,7 @@ REPO_GROUP=$(stat -c '%G' "$PROJECT_DIR" 2>/dev/null || echo "ubuntu")
 # or declared inside the decrypted root .env file.
 #
 # BACKUP_DIR          - Folder where execution logs and transaction outputs are stored.
-#                       Default: /docker/backups/net-stream
+#                       Default: /docker/backups/polaris
 # BASE_PATH           - Host path holding compose container persistent volume folders.
 #                       Default: /docker/appdata
 # BACKUP_PASSWORD     - Encryption password used by Restic to open/lock the repository.
@@ -60,7 +60,7 @@ REPO_GROUP=$(stat -c '%G' "$PROJECT_DIR" 2>/dev/null || echo "ubuntu")
 # KEEP_MONTHLY        - Number of monthly snapshots to preserve before pruning. (Default: 6)
 # RUN_DRY             - Pass '--dry-run' as command arg to simulate commands without executing writes.
 
-BACKUP_DIR="${BACKUP_DIR:-/docker/backups/net-stream}"
+BACKUP_DIR="${BACKUP_DIR:-/docker/backups/polaris}"
 BASE_PATH="${BASE_PATH:-/docker/appdata}"
 BACKUP_PASSWORD="${BACKUP_PASSWORD:-}"
 STOP_DURING_BACKUP="${STOP_DURING_BACKUP:-false}"
@@ -163,7 +163,7 @@ log() {
   fi
 }
 
-log "Starting Net-Stream Restic Backup..."
+log "Starting Polaris Restic Backup..."
 log "VPS Identity: $VPS_ID"
 log "Restic Repository: $RESTIC_REPOSITORY"
 log "External AppData Path: $BASE_PATH"
@@ -373,7 +373,7 @@ fi
 
 # Optional cold backup — temporarily suspend active containers for database consistency
 if [[ "$STOP_DURING_BACKUP" == "true" && "$RUN_DRY" != "--dry-run" ]]; then
-  ACTIVE_PROJECTS_FILE="$(mktemp /tmp/net-stream-active-projects-XXXXXX.txt)"
+  ACTIVE_PROJECTS_FILE="$(mktemp /tmp/polaris-active-projects-XXXXXX.txt)"
   chmod 644 "$ACTIVE_PROJECTS_FILE"
 
   log "Saving list of currently active compose projects..."
@@ -602,4 +602,4 @@ else
   log "PHASE 6: Integrity check skipped (Runs on Sundays only)."
 fi
 
-log "[SUCCESS] Net-Stream Restic Backup completed successfully!"
+log "[SUCCESS] Polaris Restic Backup completed successfully!"

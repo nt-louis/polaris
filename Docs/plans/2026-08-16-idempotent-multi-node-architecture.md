@@ -3,19 +3,19 @@
 > **Status:** Proposed & Ready for Review  
 > **Author:** Antigravity & Louis Bertrand Ntwali  
 > **Date:** August 16, 2026  
-> **Target:** Net-Stream Multi-Node Scalable Infrastructure  
+> **Target:** Polaris Multi-Node Scalable Infrastructure  
 
 ---
 
 ## 1. Executive Summary & Vision
 
-Net-Stream currently operates on a dual-VPS model (`VPS A` and `VPS B`). While functional, this binary classification introduces several architectural limitations:
+Polaris currently operates on a dual-VPS model (`VPS A` and `VPS B`). While functional, this binary classification introduces several architectural limitations:
 * **Fragile Service Discovery:** `discovery.py` uses hardcoded path prefixes (`VPS_B_PREFIXES`) to determine service placement.
 * **False Diagnostics & Status Probing:** Running `./manage.py status` on one machine attempts to probe services belonging to the other machine, marking them as `exited` or missing.
 * **Scaling Bottleneck:** Adding a third machine (e.g. a dedicated GPU transcoding worker, a high-capacity NAS storage node, or an edge scraper) requires modifying CLI flags, Doppler project logic, backup scripts, and CI workflows in multiple places.
 
 ### The Objective
-Transform Net-Stream into an **idempotent, N-node cluster architecture** where:
+Transform Polaris into an **idempotent, N-node cluster architecture** where:
 1. **Hosts are uniquely identified by an explicit Node ID** (e.g. `vps-a`, `vps-b`, `nas-storage`, `gpu-worker`).
 2. **Cluster Topology is declared centrally in `topology.yaml`** for automated scripting, routing, and metadata.
 3. **Repository structure remains organized by functional domain** (`Network/`,
@@ -63,7 +63,7 @@ network modes. The complete schema and authoritative example are defined in
 
 ```yaml
 version: "1.0"
-cluster_name: "net-stream"
+cluster_name: "polaris"
 
 repository:
   compose_roots: ["Network", "Media", "Utilities"]
@@ -71,21 +71,21 @@ repository:
 nodes:
   vps-a:
     name: "Primary Ingress & Core Media Node"
-    doppler_project: "net-stream-vps-a"
+    doppler_project: "polaris-vps-a"
     tags: [core, ingress, media, storage, auth]
     tailscale_fqdn: "vps-a.tailscale.ts.net"
     backup:
       tag: "vps-a"
-      repository: "rclone:gdrive:backups/net-stream/vps-a"
+      repository: "rclone:gdrive:backups/polaris/vps-a"
 
   vps-b:
     name: "Stremio Addons & Secondary Tools Node"
-    doppler_project: "net-stream-vps-b"
+    doppler_project: "polaris-vps-b"
     tags: [stremio, scrapers, compute, ai]
     tailscale_fqdn: "vps-b.tailscale.ts.net"
     backup:
       tag: "vps-b"
-      repository: "rclone:gdrive:backups/net-stream/vps-b"
+      repository: "rclone:gdrive:backups/polaris/vps-b"
 
 gateways:
   media-core:
@@ -120,7 +120,7 @@ manifest edit, not a physical move, which preserves relative bind mounts and avo
 large migration unrelated to multi-node orchestration.
 
 ```
-net-stream/
+polaris/
 ├── topology.yaml                  # Cluster manifest
 ├── .node_id                       # Local host identity file (git-ignored, e.g. "vps-a")
 ├── Network/                       # Host ingress and network gateway

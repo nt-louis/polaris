@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Backup Repository Statistics (Restic)
+# Polaris Backup Repository Statistics (Restic)
 # ==============================================================================
 # Displays storage statistics, compression ratios, and snapshot sizes for the
 # active or targeted VPS Restic backup repository.

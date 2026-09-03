@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream NetBird Server Update and Configuration Script
+# Polaris NetBird Server Update and Configuration Script
 # ==============================================================================
 set -euo pipefail
 

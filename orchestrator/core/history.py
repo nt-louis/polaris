@@ -184,7 +184,7 @@ def format_action_history_text(records: list[dict]) -> str:
 
     lines = [
         "=" * 80,
-        "Net-Stream Persistent Action Audit History",
+        "Polaris Persistent Action Audit History",
         "=" * 80,
     ]
     for r in reversed(records):

@@ -27,7 +27,7 @@ class TestBackupCommandBuilder(unittest.TestCase):
         self.assertEqual(cmd[0], "doppler")
         self.assertEqual(cmd[1], "run")
         self.assertIn("--project", cmd)
-        self.assertIn("net-stream-vps-a", cmd)
+        self.assertIn("polaris-vps-a", cmd)
         self.assertIn("--config", cmd)
         self.assertIn("backup", cmd)
         self.assertIn(script_path, cmd)

@@ -1,4 +1,4 @@
-# Net-Stream Orchestration Architecture Refactoring
+# Polaris Orchestration Architecture Refactoring
 
 **Date**: 2026-08-18  
 **Status**: Approved (Ready for Implementation)  
@@ -9,7 +9,7 @@
 ## 1. Executive Summary & Problem Statement
 
 ### 1.1 Context
-The `net-stream` repository has evolved from a collection of standalone shell scripts into a unified Python management CLI (`manage.py`) driving 79+ containerized services across multiple VPS targets with dual-gateway networking, Doppler secret injection, and Restic backups.
+The `polaris` repository has evolved from a collection of standalone shell scripts into a unified Python management CLI (`manage.py`) driving 79+ containerized services across multiple VPS targets with dual-gateway networking, Doppler secret injection, and Restic backups.
 
 ### 1.2 Current Architecture Pain Points
 1. **Monolithic Procedural Files**:

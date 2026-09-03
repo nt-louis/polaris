@@ -22,7 +22,7 @@ Update repository operational documentation to codify the new multi-node archite
    2. Add explicit placement, namespace, listen-port, state, and diagnostic records for
       workloads assigned to the node; do not create a node-owned repository tree.
    3. Provision GitHub runner with labels `[self-hosted, <node-id>]`.
-   4. Create Doppler project `net-stream-<node-id>` inheriting from root `prd`.
+   4. Create Doppler project `polaris-<node-id>` inheriting from root `prd`.
    5. Set host `.node_id` file via `./manage.py node set <node-id>`.
 
 ---

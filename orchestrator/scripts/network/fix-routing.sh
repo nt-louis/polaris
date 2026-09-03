@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Routing Fix Script (fix-routing.sh)
+# Polaris Routing Fix Script (fix-routing.sh)
 # ==============================================================================
 # Fixes routing conflicts between Gluetun and Tailscale.
 #

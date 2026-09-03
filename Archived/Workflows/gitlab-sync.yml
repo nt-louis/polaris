@@ -39,7 +39,7 @@ jobs:
         run: |
           BRANCH="${{ github.ref_name }}"
           echo "Mirroring branch '$BRANCH' to GitLab..."
-          git push git@gitlab.com:nt-louis/net-stream.git "HEAD:refs/heads/$BRANCH" --force
+          git push git@gitlab.com:nt-louis/polaris.git "HEAD:refs/heads/$BRANCH" --force
 
       - name: Delete branch on GitLab mirror
         if: github.event_name == 'delete' && github.event.ref_type == 'branch'
@@ -47,4 +47,4 @@ jobs:
           git init
           DELETED_BRANCH="${{ github.event.ref }}"
           echo "Branch $DELETED_BRANCH was deleted on GitHub. Deleting from GitLab..."
-          git push git@gitlab.com:nt-louis/net-stream.git --delete "$DELETED_BRANCH" || echo "Branch $DELETED_BRANCH not found on GitLab or already deleted."
+          git push git@gitlab.com:nt-louis/polaris.git --delete "$DELETED_BRANCH" || echo "Branch $DELETED_BRANCH not found on GitLab or already deleted."

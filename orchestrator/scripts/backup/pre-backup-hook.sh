@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Automated Pre-Backup Hook
+# Polaris Automated Pre-Backup Hook
 # ==============================================================================
 # Executes immediately before Restic snapshots to optimize storage and ensure
 # database transaction consistency.
@@ -106,6 +106,6 @@ fi
 # 3. Clean Stale Ephemeral Temp Files
 # ------------------------------------------------------------------------------
 log "Cleaning stale temporary files older than 3 days..."
-find /tmp -maxdepth 1 -name "net-stream-*" -mtime +3 -exec rm -rf {} + 2>/dev/null || true
+find /tmp -maxdepth 1 -name "polaris-*" -mtime +3 -exec rm -rf {} + 2>/dev/null || true
 
 log "Pre-backup optimizations finished successfully."

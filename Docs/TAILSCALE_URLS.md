@@ -1,4 +1,4 @@
-# Net-Stream Tailscale URLs
+# Polaris Tailscale URLs
 
 This is the current configured Tailnet route matrix. Replace
 `<tailnet>.ts.net` with the Tailnet suffix configured in Doppler. Path entries

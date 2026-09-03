@@ -13,7 +13,7 @@ Before running the tunnel container on your VPS, you need to create the tunnel i
 3. In the Zero Trust sidebar, go to **Networks -> Tunnels**.
 4. Click **Create a tunnel**.
 5. Select **cloudflared** and click Next.
-6. Name your tunnel (e.g., `net-stream-vps`) and click Save tunnel.
+6. Name your tunnel (e.g., `polaris-vps`) and click Save tunnel.
 7. Under **Install and run a connector**, select **Docker**.
 8. Copy the **Token** from the provided command (the long base64 string after `--token`). You will need this in the next step.
 
@@ -32,7 +32,7 @@ stack maps to the `network_cloudflare_tunnel` config in the active VPS project.
 2. Set `TUNNEL_TOKEN` in `network_cloudflare_tunnel` under the project for the
    VPS receiving the tunnel:
     ```bash
-    doppler secrets set --project net-stream-vps-a \
+    doppler secrets set --project polaris-vps-a \
       --config network_cloudflare_tunnel \
       TUNNEL_TOKEN
     ```

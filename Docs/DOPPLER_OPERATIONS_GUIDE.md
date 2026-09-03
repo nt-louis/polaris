@@ -1,6 +1,6 @@
 # Doppler Operations Guide
 
-Net-Stream uses Doppler SaaS as the source of truth for runtime environment
+Polaris uses Doppler SaaS as the source of truth for runtime environment
 variables and secrets. The repository contains `.env.example` files only as
 variable-name documentation and as a schema for compose validation. Do not
 copy them to `.env` or fill them with production values as part of the normal
@@ -12,8 +12,8 @@ Create one Doppler project for each VPS:
 
 | VPS | Doppler project | Repository assignment |
 |---|---|---|
-| A | `net-stream-vps-a` | Core media, utilities, network, and default services |
-| B | `net-stream-vps-b` | Stremio, AI/development, and services listed in `VPS_B_PREFIXES` |
+| A | `polaris-vps-a` | Core media, utilities, network, and default services |
+| B | `polaris-vps-b` | Stremio, AI/development, and services listed in `VPS_B_PREFIXES` |
 
 Each project contains one config per compose project. Configs are grouped in
 Doppler environments by category, while config names are derived from the
@@ -97,7 +97,7 @@ Enter real values in the Doppler dashboard or with `doppler secrets set`:
 
 ```bash
 doppler secrets set \
-  --project net-stream-vps-a \
+  --project polaris-vps-a \
   --config network_exit_node \
   TZ=Etc/UTC \
   TS_HOSTNAME=dns-gateway
@@ -139,7 +139,7 @@ The full data flow for a managed deployment is:
 1. `discovery.py` finds the compose project and supplies its repository path,
    service name, category, and VPS assignment.
 2. `doppler_manager.py` maps the VPS assignment to
-   `net-stream-vps-a` or `net-stream-vps-b`, then maps the path/category to the
+   `polaris-vps-a` or `polaris-vps-b`, then maps the path/category to the
    named service config such as `network_exit_node` or `tools_n8n`.
 3. The manager starts the operation as
    `doppler run --project <project> --config <config> -- docker compose ...`.
@@ -193,8 +193,8 @@ Doppler environment roots.
 2. **Inheritance**: Any secret set at the environment level is automatically
    available to all configs under that environment.
 3. **Migration**: To move a shared variable to an environment root:
-   - Set the value in the environment: `doppler secrets set TZ=Etc/UTC --project net-stream-vps-a --config network`
-   - Delete the redundant value from service configs: `doppler secrets delete TZ --project net-stream-vps-a --config network_exit_node`
+   - Set the value in the environment: `doppler secrets set TZ=Etc/UTC --project polaris-vps-a --config network`
+   - Delete the redundant value from service configs: `doppler secrets delete TZ --project polaris-vps-a --config network_exit_node`
 
 ## Adding a New Service
 
@@ -214,7 +214,7 @@ Rotate a value in Doppler, then recreate the affected service so it receives
 the new environment:
 
 ```bash
-doppler secrets set --project net-stream-vps-a --config auth_pocketid \
+doppler secrets set --project polaris-vps-a --config auth_pocketid \
   OIDC_CLIENT_SECRET
 ./manage.py redeploy --vps A --recreate
 ```
@@ -226,7 +226,7 @@ Avoid printing secret values while checking access. This confirms access
 without dumping values to the terminal:
 
 ```bash
-doppler secrets download --project net-stream-vps-a \
+doppler secrets download --project polaris-vps-a \
   --config auth_pocketid --format json --no-file >/dev/null
 ```
 
@@ -256,7 +256,7 @@ disabled.
 
 ## Offline Resilience & SOPS Snapshot Fallback
 
-Doppler SaaS remains the authoritative write surface and source of truth. To ensure resilience against SaaS outages, rate limits, or network partitions, `net-stream` maintains an offline, read-only cold backup layer using **SOPS + age encrypted snapshots** stored under `.snapshots/<project>/<config>.env.enc` committed to git.
+Doppler SaaS remains the authoritative write surface and source of truth. To ensure resilience against SaaS outages, rate limits, or network partitions, `polaris` maintains an offline, read-only cold backup layer using **SOPS + age encrypted snapshots** stored under `.snapshots/<project>/<config>.env.enc` committed to git.
 
 ### Automatic Fallback
 When Doppler is unreachable (or in air-gapped recovery):
@@ -291,7 +291,7 @@ The sync helper (`./manage.py secrets sync-branch`) uses an **isolated git workt
 
 **Recommended Nightly Cron (3:30 AM):**
 ```cron
-30 3 * * * ~/polaris/manage.py secrets sync-branch >> /var/log/net-stream-snapshots.log 2>&1
+30 3 * * * ~/polaris/manage.py secrets sync-branch >> /var/log/polaris-snapshots.log 2>&1
 ```
 
 **Periodic Roll-Up to `main`:**

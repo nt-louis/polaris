@@ -24,7 +24,7 @@ Environment protection rules restrict approvers and deployment branches.
 
 ### Runner Registration Command Template:
 ```bash
-./config.sh --url https://github.com/nt-louis/net-stream \
+./config.sh --url https://github.com/nt-louis/polaris \
             --token <REGISTRATION_TOKEN> \
             --name "<node-id>-runner" \
             --labels "self-hosted,<node-id>" \
@@ -40,9 +40,9 @@ For each node defined in `topology.yaml`, create a corresponding **GitHub Enviro
 
 | Environment Name | Environment Variables | Secrets |
 | :--- | :--- | :--- |
-| `vps-a` | Node-specific `PROD_DIR` | `DOPPLER_TOKEN` (scoped to `net-stream-vps-a`) |
-| `vps-b` | Node-specific `PROD_DIR` | `DOPPLER_TOKEN` (scoped to `net-stream-vps-b`) |
-| `[future-node]` | Node-specific `PROD_DIR` | `DOPPLER_TOKEN` (scoped to `net-stream-<node>`) |
+| `vps-a` | Node-specific `PROD_DIR` | `DOPPLER_TOKEN` (scoped to `polaris-vps-a`) |
+| `vps-b` | Node-specific `PROD_DIR` | `DOPPLER_TOKEN` (scoped to `polaris-vps-b`) |
+| `[future-node]` | Node-specific `PROD_DIR` | `DOPPLER_TOKEN` (scoped to `polaris-<node>`) |
 
 ---
 

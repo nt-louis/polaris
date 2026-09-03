@@ -1,12 +1,12 @@
 # Network Architecture: The Nested Gateway Pattern
 
-This document is the authoritative technical reference for the network architecture, isolated gateway topologies, policy routing, and reverse proxy mechanisms utilized across the Net-Stream stack.
+This document is the authoritative technical reference for the network architecture, isolated gateway topologies, policy routing, and reverse proxy mechanisms utilized across the Polaris stack.
 
 ---
 
 ## Architecture Overview
 
-Net-Stream implements a **Nested Gateway Pattern** to partition self-hosted application workloads across isolated network perimeters. Most application containers share network namespaces with specialized **Gluetun + Tailscale + Caddy** gateways, but not every workload uses that class. The active topology also includes a Tailscale-only bridge gateway, a dedicated cloud Gluetun gateway, host-network agents, and a separate NetBird control plane.
+Polaris implements a **Nested Gateway Pattern** to partition self-hosted application workloads across isolated network perimeters. Most application containers share network namespaces with specialized **Gluetun + Tailscale + Caddy** gateways, but not every workload uses that class. The active topology also includes a Tailscale-only bridge gateway, a dedicated cloud Gluetun gateway, host-network agents, and a separate NetBird control plane.
 
 ### Traffic Flow Diagram
 
@@ -167,7 +167,7 @@ network_mode: "container:media-gateway-core-gluetun"
 ### Repository Directory Hierarchy
 
 ```text
-net-stream/
+polaris/
 ├── Media/
 │   ├── comics/
 │   │   └── gateway/                ← Tailscale hostname: comics

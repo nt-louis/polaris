@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Local App Builder Script (build-local-app.sh)
+# Polaris Local App Builder Script (build-local-app.sh)
 # ==============================================================================
 # Unified builder for local source-built applications (fmhy, monochrome).
 # Clones or updates the upstream repository, builds the Docker image outside

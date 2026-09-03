@@ -260,7 +260,7 @@ Create an ArgoCD Application pointing to your Git repository:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: net-stream-k8s
+  name: polaris-k8s
   namespace: argocd
 spec:
   project: default

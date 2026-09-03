@@ -1,4 +1,4 @@
-# Net-Stream GitLab CI/CD Pipeline
+# Polaris GitLab CI/CD Pipeline
 # Mirrors GitHub Actions CI for redundancy and independent validation.
 
 stages:

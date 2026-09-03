@@ -70,7 +70,7 @@ def get_short_category_slug(category_name: str, rel_dir: str) -> str:
 def get_doppler_project(vps_context: Optional[str] = "A") -> str:
     """Return the Doppler project name for a VPS context ('A' or 'B')."""
     vps_upper = (vps_context or "A").upper()
-    return f"net-stream-vps-{vps_upper.lower()}"
+    return os.environ.get("DOPPLER_PROJECT") or f"polaris-vps-{vps_upper.lower()}"
 
 
 def get_doppler_config(

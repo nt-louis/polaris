@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Environment Bootstrapping Script (bootstrap-env.sh)
+# Polaris Environment Bootstrapping Script (bootstrap-env.sh)
 # ==============================================================================
 # Finds all .env.example files in the repository and copies them to .env.
 # ==============================================================================

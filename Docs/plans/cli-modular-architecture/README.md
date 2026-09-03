@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary & Objective
 
-This project refactors the Net-Stream command-line and management layer from monolithic procedural scripts in `Scripts/deploy/core/` (~4,600 LOC across 14 modules) into a decoupled, domain-driven package named `orchestrator/`.
+This project refactors the Polaris command-line and management layer from monolithic procedural scripts in `Scripts/deploy/core/` (~4,600 LOC across 14 modules) into a decoupled, domain-driven package named `orchestrator/`.
 
 ### Key Outcomes
 1. **Declarative Service Registry**: Central `services.yaml` replacing procedural heuristic regexes (`VPS_B_PREFIXES`, `CORE_INFRA_NAMES`, category substrings).

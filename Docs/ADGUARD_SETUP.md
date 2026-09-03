@@ -1,6 +1,6 @@
 # AdGuard Home Setup & Architecture Guide
 
-This document outlines the deployment and configuration of the Global DNS Ad-Blocking infrastructure for the Net-Stream project.
+This document outlines the deployment and configuration of the Global DNS Ad-Blocking infrastructure for the Polaris project.
 
 ## Architecture Overview
 

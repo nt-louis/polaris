@@ -100,7 +100,7 @@ class SecretsAction(BaseAction):
             print("[NOTE] Verify redundant keys in the Doppler Web Dashboard ('./manage.py secrets open') before pruning.")
 
             vps_targets = sorted(get_valid_node_ids()) if target_vps == "ALL" else [target_vps]
-            proj_names = ", ".join(f"net-stream-vps-{v.lower()}" for v in vps_targets)
+            proj_names = ", ".join(f"polaris-vps-{v.lower()}" for v in vps_targets)
             prompt = f"secrets prune will delete redundant entries from Doppler project(s) {proj_names}. Proceed?"
             from orchestrator.ui.prompts import confirm_action
 
@@ -175,7 +175,7 @@ class SecretsAction(BaseAction):
                     message="Missing config name argument.",
                 )
             cfg = remaining_args[0]
-            project = f"net-stream-vps-{target_vps.lower()}"
+            project = f"polaris-vps-{target_vps.lower()}"
 
             from orchestrator.secrets.snapshots import SnapshotManager
 

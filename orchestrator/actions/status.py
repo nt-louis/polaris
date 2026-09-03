@@ -172,7 +172,7 @@ class StatusAction(BaseAction):
             console = Console()
             vps_title = f" [VPS {target_vps.upper()}]" if target_vps else ""
             table = Table(
-                title=f"Net-Stream Service Health & Status Inspector{vps_title}",
+                title=f"Polaris Service Health & Status Inspector{vps_title}",
                 header_style="bold #38bdf8",
                 border_style="#d97706",
             )
@@ -208,7 +208,7 @@ class StatusAction(BaseAction):
         else:
             vps_title = f" [VPS {target_vps.upper()}]" if target_vps else ""
             print("=" * 80)
-            print(f"Net-Stream Service Health & Status Inspector{vps_title}")
+            print(f"Polaris Service Health & Status Inspector{vps_title}")
             print("=" * 80)
             for r in status_rows:
                 print(f"[{r['vps']}] {r['project']:<20} | {r['status']:<25} | {r['ports']}")

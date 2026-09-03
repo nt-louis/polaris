@@ -16,7 +16,7 @@ By the end of Phase 2:
 3. `./manage.py doctor` validates node-specific network rules and gateway configurations.
 4. The TUI dashboard displays active node identity and enables seamless node switching.
 5. The Restic backup engine (`backup-all.sh`, `restore-all.sh`) namespaces volume repositories dynamically per node identity.
-6. `SnapshotManager` handles arbitrary `net-stream-<node-id>` project mappings with zero hardcoded assumptions.
+6. `SnapshotManager` handles arbitrary `polaris-<node-id>` project mappings with zero hardcoded assumptions.
 
 ---
 
@@ -28,7 +28,7 @@ By the end of Phase 2:
 | [`2b-status-and-doctor-scoping.md`](./2b-status-and-doctor-scoping.md) | Diagnostics | Scoped status inspector, `--cluster` mode, and node-aware pre-flight doctor checks. |
 | [`2c-tui-control-center-updates.md`](./2c-tui-control-center-updates.md) | Interactive TUI | Node identity header, cluster filter menu, and multi-node status rendering. |
 | [`2d-restic-backup-pipeline-updates.md`](./2d-restic-backup-pipeline-updates.md) | Backup & Disaster Recovery | `backup-all.sh`, `restore-all.sh`, and `backup-check.sh` node namespacing. |
-| [`2e-snapshot-manager-node-support.md`](./2e-snapshot-manager-node-support.md) | Secrets Snapshots | SOPS snapshot cold fallback supporting dynamic `net-stream-<node-id>` projects. |
+| [`2e-snapshot-manager-node-support.md`](./2e-snapshot-manager-node-support.md) | Secrets Snapshots | SOPS snapshot cold fallback supporting dynamic `polaris-<node-id>` projects. |
 
 ---
 

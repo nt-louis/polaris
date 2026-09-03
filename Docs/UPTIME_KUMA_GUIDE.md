@@ -1,6 +1,6 @@
 # Uptime Monitoring & Notifications with Uptime Kuma
 
-Welcome to your self-hosted uptime and performance command center! **Uptime Kuma** is a beautiful, modern, and lightweight service monitor that keeps a constant pulse on your entire Net-Stream stack.
+Welcome to your self-hosted uptime and performance command center! **Uptime Kuma** is a beautiful, modern, and lightweight service monitor that keeps a constant pulse on your entire Polaris stack.
 
 This guide will walk you through setting up Uptime Kuma, understanding how it routes traffic across your isolated Docker namespaces, configuring your first set of monitors, and connecting instant notifications (like Telegram, Discord, or Push alerts).
 
@@ -8,7 +8,7 @@ This guide will walk you through setting up Uptime Kuma, understanding how it ro
 
 ## How Uptime Kuma Fits Your Network Architecture
 
-Because Net-Stream uses the **Nested Gateway Pattern**, applications are divided into isolated network namespaces (`core`, `addons`, `stremio-util`, `comics`, `util`, etc.). Uptime Kuma resides in the **`util` (Utilities)** namespace sharing the stack with `utilities-gateway-gluetun`.
+Because Polaris uses the **Nested Gateway Pattern**, applications are divided into isolated network namespaces (`core`, `addons`, `stremio-util`, `comics`, `util`, etc.). Uptime Kuma resides in the **`util` (Utilities)** namespace sharing the stack with `utilities-gateway-gluetun`.
 
 This layout gives Uptime Kuma two distinct ways of reaching and monitoring your services:
 
@@ -149,7 +149,7 @@ Uptime Kuma allows you to compile your monitors into a stunning, public-facing o
 
 1.  Click **Status Pages** in the top navigation bar.
 2.  Click **New Status Page**.
-3.  Give it a name (e.g., `Net-Stream Services`) and customize the URL slug (e.g., `status`).
+3.  Give it a name (e.g., `Polaris Services`) and customize the URL slug (e.g., `status`).
 4.  **Drag and drop** your active monitors into groups (e.g., "Media Services", "Stremio Addons", "Utility Tools").
 5.  Add customized header descriptions, theme colors (dark mode by default!), and footer links.
 6.  Hit **Save**. You now have a gorgeous, live-updating dashboard showing perfect green checkmarks!

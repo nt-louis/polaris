@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# net-stream — System-wide CLI wrapper for Net-Stream Stack Manager
+# polaris — System-wide CLI wrapper for Polaris Stack Manager
 # ==============================================================================
 set -e
 
 find_repo_root() {
     # 1. Check explicit environment override
-    if [ -n "$NET_STREAM_ROOT" ] && [ -d "$NET_STREAM_ROOT/orchestrator" ] && [ -f "$NET_STREAM_ROOT/manage.py" ]; then
-        echo "$NET_STREAM_ROOT"
+    if [ -n "$POLARIS_ROOT" ] && [ -d "$POLARIS_ROOT/orchestrator" ] && [ -f "$POLARIS_ROOT/manage.py" ]; then
+        echo "$POLARIS_ROOT"
         return 0
     fi
 
@@ -48,11 +48,12 @@ find_repo_root() {
         return 0
     fi
 
-    echo "Error: Could not locate net-stream repository root. Set NET_STREAM_ROOT or run from within the repository." >&2
+    echo "Error: Could not locate polaris repository root. Set NET_STREAM_ROOT or run from within the repository." >&2
     exit 1
 }
 
 REPO_ROOT="$(find_repo_root)"
+export POLARIS_ROOT="$REPO_ROOT"
 export NET_STREAM_ROOT="$REPO_ROOT"
 
 # Select Python environment: local repo virtualenv if present, else system python3

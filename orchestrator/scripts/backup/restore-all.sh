@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Universal Recovery & Restore Script (Restic-based)
+# Polaris Universal Recovery & Restore Script (Restic-based)
 # ==============================================================================
 # Recovers configurations, databases, and Docker images from Restic snapshots.
 #

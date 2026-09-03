@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# pre-commit hook (net-stream)
+# pre-commit hook (polaris)
 #
 # Defense-in-depth guard that runs for EVERY committer — pi agent, humans,
 # CI — independent of the pi extension layer. Blocks staging of:

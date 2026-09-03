@@ -1,7 +1,7 @@
 # Self-Hosting NetBird Control Plane with PocketID & Caddy
 
 > [!NOTE]
-> **Status Notice**: Tailscale is the active mesh network for the Net-Stream stack. This guide documents historical research and self-hosting procedures for running an independent NetBird control plane.
+> **Status Notice**: Tailscale is the active mesh network for the Polaris stack. This guide documents historical research and self-hosting procedures for running an independent NetBird control plane.
 
 > [!WARNING]
 > The NetBird stack is an optional, host-specific control plane and is not
@@ -51,7 +51,7 @@ Before deploying, you must register NetBird as an OpenID Connect (OIDC) client i
 
 ### Step 2: Configure Environment Variables
 We need to define the domain names, secrets, and OIDC credentials in Doppler
-SaaS under project `net-stream-vps-a`, config `network_netbird_server`,
+SaaS under project `polaris-vps-a`, config `network_netbird_server`,
 environment `network`. `Utilities/netbird-server` is assigned to VPS A by the
 repository discovery rules.
 

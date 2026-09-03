@@ -263,7 +263,7 @@ class DependencyReportAction(BaseAction):
 
         md = [
             "# Container Dependency & Vulnerability Assessment",
-            f"**Generated**: `{now_str}` | **Scope**: Net-Stream Infrastructure (VPS A & B) | **Projects**: `{total_projects}` | **Services**: `{total_services}`\n",
+            f"**Generated**: `{now_str}` | **Scope**: Polaris Infrastructure (VPS A & B) | **Projects**: `{total_projects}` | **Services**: `{total_services}`\n",
             "## 1. Executive Summary",
             "This document outlines the container image dependency status across all deployed Docker Compose stacks on VPS A and VPS B. Upstream registries are inspected continuously to identify security patches, minor feature updates, and major architectural upgrades while enforcing a 72-hour release stability quarantine.\n",
             "## 2. Infrastructure Metrics & Governance Summary",

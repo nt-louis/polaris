@@ -175,12 +175,12 @@ python3 manage.py deploy --services <changed_dirs> --vps B
    mkdir -p actions-runner && cd actions-runner
    curl -o actions-runner-linux-x64-2.317.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.317.0/actions-runner-linux-x64-2.317.0.tar.gz
    tar xzf ./actions-runner-linux-x64-2.317.0.tar.gz
-   ./config.sh --url https://github.com/nt-louis/net-stream --token YOUR_TOKEN --labels vps-a --unattended
+   ./config.sh --url https://github.com/nt-louis/polaris --token YOUR_TOKEN --labels vps-a --unattended
    sudo ./svc.sh install && sudo ./svc.sh start
    ```
 3. On **VPS B**, run the same commands using `--labels vps-b`:
    ```bash
-   ./config.sh --url https://github.com/nt-louis/net-stream --token YOUR_TOKEN --labels vps-b --unattended
+   ./config.sh --url https://github.com/nt-louis/polaris --token YOUR_TOKEN --labels vps-b --unattended
    sudo ./svc.sh install && sudo ./svc.sh start
    ```
 
@@ -194,7 +194,7 @@ python3 manage.py deploy --services <changed_dirs> --vps B
 
 ### 2. Trivy Vulnerability Scanner ([`security-scan.yml`](.github/workflows/security-scan.yml))
 * Scans repository Compose and infrastructure configuration on pull requests, `main` pushes, and manual runs for **HIGH** and **CRITICAL** findings.
-* Image vulnerability scanning is intentionally deferred until its false-positive and failure-handling policy is established in [issue #88](https://github.com/nt-louis/net-stream/issues/88).
+* Image vulnerability scanning is intentionally deferred until its false-positive and failure-handling policy is established in [issue #88](https://github.com/nt-louis/polaris/issues/88).
 * Outputs reports directly into GitHub Actions step summaries.
 
 ---

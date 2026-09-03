@@ -113,7 +113,7 @@ class TestManageCliRouter(unittest.TestCase):
                  self.assertRaises(SystemExit) as cm:
                 manage.main()
             self.assertEqual(cm.exception.code, 0)
-            target = Path(tmpdir) / "net-stream"
+            target = Path(tmpdir) / "polaris"
             self.assertTrue(target.exists())
             self.assertTrue(os.access(target, os.X_OK))
 

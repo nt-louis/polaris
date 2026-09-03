@@ -187,7 +187,7 @@ class SnapshotManager:
     def snapshot_all(self, vps_context: str = "A") -> tuple[int, int]:
         """Export all configs for a VPS from Doppler and encrypt to .snapshots."""
         vps = vps_context.upper()
-        project = f"net-stream-vps-{vps.lower()}"
+        project = os.environ.get("DOPPLER_PROJECT") or f"polaris-vps-{vps.lower()}"
 
         logger.info("[INFO] Fetching configuration list for %s from Doppler...", project)
         cmd = ["doppler", "configs", "--project", project, "--json"]
@@ -255,7 +255,7 @@ class SnapshotManager:
         if not self.snapshots_dir.exists():
             return snapshots
 
-        projects = [f"net-stream-vps-{vps_context.lower()}"] if vps_context else os.listdir(str(self.snapshots_dir))
+        projects = [os.environ.get("DOPPLER_PROJECT") or f"polaris-vps-{vps_context.lower()}"] if vps_context else os.listdir(str(self.snapshots_dir))
 
         for proj in projects:
             proj_dir = self.snapshots_dir / proj
@@ -324,7 +324,7 @@ def sync_snapshots_to_branch(
     else:
         start_ref = base
 
-    worktree_dir = Path(tempfile.mkdtemp(prefix="net-stream-sync-"))
+    worktree_dir = Path(tempfile.mkdtemp(prefix="polaris-sync-"))
 
     try:
         _run_git(["worktree", "add", "--detach", str(worktree_dir), start_ref, "--quiet"], cwd=root)

@@ -248,7 +248,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     parser = create_action_parser(
         prog="deploy",
-        description="Deploy Net-Stream containerized services with DAG dependency sequencing and Doppler secrets.",
+        description="Deploy Polaris containerized services with DAG dependency sequencing and Doppler secrets.",
         with_targets=True,
         with_vps=True,
         with_yes=True,

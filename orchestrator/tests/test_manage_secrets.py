@@ -24,13 +24,13 @@ class TestManageSecretsSnapshots(unittest.TestCase):
             with self.assertRaises(SystemExit) as exc:
                 manage.main()
             self.assertEqual(exc.exception.code, 0)
-            mock_snapshot_cfg.assert_called_once_with("net-stream-vps-a", "auth_authelia")
+            mock_snapshot_cfg.assert_called_once_with("polaris-vps-a", "auth_authelia")
 
     @patch("orchestrator.secrets.snapshots.SnapshotManager.list_snapshots")
     def test_secrets_snapshots_list(self, mock_list):
         mock_list.return_value = [
             {
-                "project": "net-stream-vps-a",
+                "project": "polaris-vps-a",
                 "config": "auth_authelia",
                 "path": "/path/to/snapshot",
                 "size": 1024,

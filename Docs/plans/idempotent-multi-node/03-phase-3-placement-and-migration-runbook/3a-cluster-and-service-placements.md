@@ -7,7 +7,7 @@
 
 ## 1. Dual-Level Placement Models
 
-Net-Stream supports two placement models to balance zero-friction moves with surgical rebalancing:
+Polaris supports two placement models to balance zero-friction moves with surgical rebalancing:
 
 ### Model 1: Cluster / Pod Level Placement (No Member Reconfiguration)
 * **How it works:** An entire explicit namespace (for example `media-core`, including

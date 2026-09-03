@@ -206,9 +206,9 @@ def get_dashboard_categories() -> list[dict]:
                 {"type": "radio", "group": "sys_cmd", "label": "Run pre-flight infrastructure diagnostics (doctor)", "value": "doctor", "selected": False},
                 {"type": "radio", "group": "sys_cmd", "label": "Validate compose & routing configs (validate)", "value": "validate", "selected": False},
                 {"type": "separator"},
-                {"type": "radio", "group": "sys_cmd", "label": "Install system-wide 'net-stream' CLI wrapper", "value": "cli-install", "selected": False},
-                {"type": "radio", "group": "sys_cmd", "label": "Verify system-wide 'net-stream' CLI installation", "value": "cli-verify", "selected": False},
-                {"type": "radio", "group": "sys_cmd", "label": "Uninstall system-wide 'net-stream' CLI wrapper", "value": "cli-uninstall", "selected": False},
+                {"type": "radio", "group": "sys_cmd", "label": "Install system-wide 'polaris' CLI wrapper", "value": "cli-install", "selected": False},
+                {"type": "radio", "group": "sys_cmd", "label": "Verify system-wide 'polaris' CLI installation", "value": "cli-verify", "selected": False},
+                {"type": "radio", "group": "sys_cmd", "label": "Uninstall system-wide 'polaris' CLI wrapper", "value": "cli-uninstall", "selected": False},
                 {"type": "separator"},
                 {"type": "radio", "group": "sys_cmd", "label": "Build & deploy FMHY Wiki app", "value": "update-fmhy", "selected": False},
                 {"type": "radio", "group": "sys_cmd", "label": "Build & deploy Monochrome music app", "value": "update-monochrome", "selected": False},
@@ -225,7 +225,7 @@ def get_dashboard_categories() -> list[dict]:
             "name": "Help & About",
             "desc": "Learn about keybindings, CLI tools, and unified control options.",
             "items": [
-                {"type": "info", "label": "Welcome to Net-Stream Control Center!"},
+                {"type": "info", "label": "Welcome to Polaris Control Center!"},
                 {"type": "info", "label": "Consolidated stack management and infrastructure CLI utilities."},
                 {"type": "info", "label": ""},
                 {"type": "info", "label": "Live Inspector Hotkeys:"},
@@ -844,7 +844,7 @@ def update_layout(
     on_main = is_main_branch() or not branch
 
     header_text = Text()
-    header_text.append("NET-STREAM", style=f"bold {TUI_THEME['c_brand']}")
+    header_text.append("POLARIS", style=f"bold {TUI_THEME['c_brand']}")
     header_text.append("  Control Center", style=f"bold {TUI_THEME['c_text']}")
     header_text.append("   ", style="")
     header_text.append(f" Node {vps_label} ", style=f"bold reverse {TUI_THEME['c_brand']}")
@@ -1024,7 +1024,7 @@ def update_layout(
         node_vps = vps_label.upper() if vps_label and vps_label.upper() != "ALL" else "A"
         sys_ctx = Text()
         sys_ctx.append("Secrets: ", style=f"dim {TUI_THEME['c_muted']}")
-        sys_ctx.append(f"net-stream-vps-{node_vps.lower()} ", style=f"bold {TUI_THEME['c_accent']}")
+        sys_ctx.append(f"polaris-vps-{node_vps.lower()} ", style=f"bold {TUI_THEME['c_accent']}")
         sys_ctx.append("│ Mesh: ", style=f"dim {TUI_THEME['c_muted']}")
         sys_ctx.append("Tailscale MagicDNS", style=f"bold {TUI_THEME['c_brand']}")
         right_side.add_row(sys_ctx)
@@ -1188,7 +1188,7 @@ def update_layout(
             "network": "Repairs Tailscale MagicDNS routing, subnet routes, and VPN gateways.",
             "sysutils": "Pre-flight infrastructure diagnostics, Compose linting, and health inspection.",
         }
-        tip_text = cat_tips.get(cat_id, "Net-Stream modular orchestration workflow.")
+        tip_text = cat_tips.get(cat_id, "Polaris modular orchestration workflow.")
 
         detail_info_tbl = Table(box=rich_box.ROUNDED, expand=True, show_header=False,
                                 border_style=TUI_THEME["inactive_border"], padding=(0, 2))
@@ -1737,7 +1737,7 @@ def render_checklist_layout(
 
     # Header
     hdr = Text()
-    hdr.append("NET-STREAM", style=f"bold {TUI_THEME['c_brand']}")
+    hdr.append("POLARIS", style=f"bold {TUI_THEME['c_brand']}")
     hdr.append(f"  Interactive {verb_title} Selector", style=f"bold {TUI_THEME['c_text']}")
     hdr.append(f"  {vps_label}   ", style=f"dim {TUI_THEME['c_muted']}")
     frac_style = TUI_THEME["c_success"] if checked_count == total_count else (TUI_THEME["c_accent"] if checked_count > 0 else TUI_THEME["c_muted"])

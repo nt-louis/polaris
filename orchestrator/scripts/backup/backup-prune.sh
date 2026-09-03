@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Net-Stream Backup Pruning & Retention Script (Restic)
+# Polaris Backup Pruning & Retention Script (Restic)
 # ==============================================================================
 # Executes on-demand or automated repository pruning and snapshot retention
 # enforcement for the active or targeted VPS repository.
