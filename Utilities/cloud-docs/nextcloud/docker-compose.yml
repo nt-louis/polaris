@@ -86,7 +86,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    image: mariadb:10.11
+    image: mariadb:12.3
     container_name: nextcloud-db
     labels:
       - "wud.tag.include=^10\\.11(\\.\\d+)*$"

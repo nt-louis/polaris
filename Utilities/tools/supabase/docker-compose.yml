@@ -32,7 +32,7 @@ services:
       start_period: 10s
 
   supabase-rest:
-    image: postgrest/postgrest:v12.2.12
+    image: postgrest/postgrest:v13.0.8
     container_name: supabase-rest
     restart: unless-stopped
     networks:
