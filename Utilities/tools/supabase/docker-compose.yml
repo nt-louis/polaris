@@ -63,7 +63,7 @@ services:
       - API_EXTERNAL_URL=${API_EXTERNAL_URL}
 
   storage:
-    image: supabase/storage-api:v1.72.10
+    image: supabase/storage-api:v1.73.0
     container_name: supabase-storage
     restart: unless-stopped
     networks:
