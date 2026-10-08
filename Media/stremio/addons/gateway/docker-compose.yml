@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
 
   caddy:
-    image: caddy:2.11.4-alpine
+    image: caddy:2.11.6-alpine
     container_name: media-gateway-stremio-addons-caddy
     labels:
       - "wud.tag.include=^2(\\.\\d+)*-alpine$"
